@@ -1,7 +1,3 @@
-String.prototype.reverse = function() {
-	return this.split("").reverse().join("");
-};
-
 // BigInteger():            get BigInteger.ZERO
 // BigInteger("123"):       create a new BigInteger with value 123
 // BigInteger(123):         create a new BigInteger with value 123
@@ -55,7 +51,8 @@ BigInteger.prototype.toString = function(base) {
 		return "0";
 	}
 	if (base == 10) {
-		return (this._s < 0 ? "-" : "") + (this._d.join("").reverse() || "0");
+		// [].reverse() modifies the array, so we need to copy if first
+		return (this._s < 0 ? "-" : "") + (this._d.slice().reverse().join("") || "0");
 	}
 	else {
 		var numerals = BigInteger.digits;
@@ -70,9 +67,11 @@ BigInteger.prototype.toString = function(base) {
 			var divmod = n.divMod(base);
 			n = divmod[0];
 			digit = divmod[1];
+			// TODO: This could be changed to unshift instead of reversing at the end.
+			// Benchmark both to compare speeds.
 			digits.push(numerals[digit]);
 		}
-		return (sign < 0 ? "-" : "") + digits.join("").reverse();
+		return (sign < 0 ? "-" : "") + digits.reverse().join("");
 	}
 };
 
