@@ -47,7 +47,7 @@ BigInteger.prototype.toString = function(base) {
 	if (base < 2 || base > 36) {
 		throw new Error("illegal radix " + base + ".");
 	}
-	if (this.isZero()) {
+	if (this._s === 0) {
 		return "0";
 	}
 	if (base == 10) {
@@ -63,7 +63,7 @@ BigInteger.prototype.toString = function(base) {
 		var digits = [];
 		var digit;
 
-		while (!n.isZero()) {
+		while (n._s !== 0) {
 			var divmod = n.divMod(base);
 			n = divmod[0];
 			digit = divmod[1];
@@ -114,6 +114,46 @@ BigInteger.small = [
 	new BigInteger([4,3], 1),
 	new BigInteger([5,3], 1),
 	new BigInteger([6,3], 1)
+];
+
+BigInteger.radixRegex = [
+	/^$/,
+	/^$/,
+	/^[01]*$/,
+	/^[012]*$/,
+	/^[0-3]*$/,
+	/^[0-4]*$/,
+	/^[0-5]*$/,
+	/^[0-6]*$/,
+	/^[0-7]*$/,
+	/^[0-8]*$/,
+	/^[0-9]*$/,
+	/^[0-9aA]*$/,
+	/^[0-9abAB]*$/,
+	/^[0-9abcABC]*$/,
+	/^[0-9a-dA-D]*$/,
+	/^[0-9a-eA-E]*$/,
+	/^[0-9a-fA-F]*$/,
+	/^[0-9a-gA-G]*$/,
+	/^[0-9a-hA-H]*$/,
+	/^[0-9a-iA-I]*$/,
+	/^[0-9a-jA-J]*$/,
+	/^[0-9a-kA-K]*$/,
+	/^[0-9a-lA-L]*$/,
+	/^[0-9a-mA-M]*$/,
+	/^[0-9a-nA-N]*$/,
+	/^[0-9a-oA-O]*$/,
+	/^[0-9a-pA-P]*$/,
+	/^[0-9a-qA-Q]*$/,
+	/^[0-9a-rA-R]*$/,
+	/^[0-9a-sA-S]*$/,
+	/^[0-9a-tA-T]*$/,
+	/^[0-9a-uA-U]*$/,
+	/^[0-9a-vA-V]*$/,
+	/^[0-9a-wA-W]*$/,
+	/^[0-9a-xA-X]*$/,
+	/^[0-9a-yA-Y]*$/,
+	/^[0-9a-zA-Z]*$/,
 ];
 
 BigInteger.parse = function(s, base) {
@@ -171,7 +211,7 @@ BigInteger.parse = function(s, base) {
 		}
 
 		// Check for digits outside the range
-		if (!(new RegExp("^[" + BigInteger.digits.slice(0, base).join("") + "]*$", "i").test(digits))) {
+		if (!(BigInteger.radixRegex[base].test(digits))) {
 			throw new Error("Bad digit for radix " + base);
 		}
 
@@ -224,11 +264,12 @@ BigInteger.prototype.add = function(n) {
 	var sum = new Array(Math.max(al, bl) + 1);
 	var size = Math.min(al, bl);
 	var carry = 0;
+	var floor = Math.floor;
 
 	for (var i = 0; i < size; i++) {
 		var digit = a[i] + b[i] + carry;
 		sum[i] = digit % 10;
-		carry = Math.floor(digit / 10);
+		carry = floor(digit / 10);
 	}
 	if (bl > al) {
 		a = b;
@@ -237,7 +278,7 @@ BigInteger.prototype.add = function(n) {
 	for (var i = size; i < al; i++) {
 		var digit = a[i] + carry;
 		sum[i] = digit % 10;
-		carry = Math.floor(digit / 10);
+		carry = floor(digit / 10);
 	}
 	if (carry) {
 		sum[i] = carry;
@@ -311,7 +352,6 @@ BigInteger.prototype.subtract = function(n) {
 		var digit = a[i] - borrow;
 		if (digit < 0) {
 			digit += 10;
-			borow = -1;
 		}
 		else {
 			borrow = 0;
@@ -401,6 +441,7 @@ BigInteger.prototype.multiply = function(n) {
 	var b = (r ? n : this)._d;
 	var al = a.length;
 	var bl = b.length;
+	var floor = Math.floor;
 
 	var pl = al + bl;
 	var partial = new Array(pl);
@@ -413,12 +454,12 @@ BigInteger.prototype.multiply = function(n) {
 		for (var j = 0; j < al; j++) {
 			var digit = b[i] * a[j] + carry;
 			partial[i+j] += digit;
-			carry = Math.floor(partial[i+j] / 10);
+			carry = floor(partial[i+j] / 10);
 			partial[i+j] = partial[i+j] % 10;
 		}
 		if (carry) {
 			partial[i+j] += carry;
-			carry = Math.floor(partial[i+j] / 10);
+			carry = floor(partial[i+j] / 10);
 			partial[i+j] = partial[i+j] % 10;
 		}
 	}
@@ -440,16 +481,10 @@ BigInteger.prototype.mod = function(n) {
 
 BigInteger.prototype.divMod = function(n) {
 	n = BigInteger(n);
-	if (n._s === 0) {
-		throw new Error("Divide by zero");
-	}
+	if (n._s === 0) throw new Error("Divide by zero");
 
-	if (this._s === 0) {
-		return [BigInteger.ZERO, BigInteger.ZERO];
-	}
-	if (n.isUnit()) {
-		return [n._s > 0 ? this : this.negate(), BigInteger.ZERO];
-	}
+	if (this._s === 0) return [BigInteger.ZERO, BigInteger.ZERO];
+	if (n.isUnit()) return [n._s > 0 ? this : this.negate(), BigInteger.ZERO];
 
 	// Test for easy cases -- |n1| <= |n2|
 	switch (this.compareAbs(n)) {
@@ -459,18 +494,6 @@ BigInteger.prototype.divMod = function(n) {
 		return [BigInteger.ZERO, this];
 	}
 
-	function getMostSignificantDigits(n, digits) {
-		return new BigInteger(n._d.slice(n._d.length - digits), 1);
-	}
-
-	function getLeastSignificantDigitsArray(n, allBut) {
-		return n._d.slice(0, n._d.length - allBut);
-	}
-
-	function msd(n, count) {
-		return new BigInteger(n._d.slice(n._d.length - count), 1);
-	}
-
 	var sign = this._s === n._s ? 1 : -1;
 	var a = n.abs();
 	var b = this.abs();
@@ -478,13 +501,9 @@ BigInteger.prototype.divMod = function(n) {
 	var digits = a._d.length;
 	var max = b._d.length;
 	var quot = [];
-	var msda = msd(a, 1);
 	var tries = 1;
 	var dd = digits;
 	var small = BigInteger.small;
-
-//trace && print("dividing:", b);
-//trace && print("by:      ", a);
 
 	var part = new BigInteger([], 1);
 	part._s = 1;
@@ -492,11 +511,8 @@ BigInteger.prototype.divMod = function(n) {
 	for (var i = digits; b_digits.length; i++) {
 		part._d.unshift(b_digits.pop());
 		part = new BigInteger(part._d, 1);
-//trace && print("guessing from", part);
-//trace && print("    compare ^ to ", a);
+
 		if (part.compareAbs(a) < 0) {
-//trace && print("        smaller, get more of the number");
-//trace && print("*** adding digit:", 0);
 			quot.push(0);
 			tries++;
 			continue;
@@ -514,15 +530,13 @@ BigInteger.prototype.divMod = function(n) {
 			}
 			guess--;
 		} while (guess);
-//trace && print("guess:", guess);
-//trace && print("multiply:", a, "*", guess, "=", check);
-//trace && print("*** adding digit:", guess);
+
 		quot.push(guess);
 		if (!guess) continue;
 		var diff = part.subtract(check);
-//trace && print("subtract:", diff);
+
 		part._d = diff._d.slice();
-//trace && print("bring down:", b_digits.length ? b_digits[b_digits.length - 1] : "nothing left");
+
 		tries = 1;
 		i = digits - 1;
 	}
