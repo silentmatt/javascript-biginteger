@@ -255,24 +255,27 @@ BigInteger.prototype.add = function(n) {
 	var sum = new Array(Math.max(al, bl) + 1);
 	var size = Math.min(al, bl);
 	var carry = 0;
-	var floor = Math.floor;
 
 	for (var i = 0; i < size; i++) {
 		var digit = a[i] + b[i] + carry;
 		sum[i] = digit % 10;
-		carry = floor(digit / 10);
+		carry = (digit / 10) | 0;
 	}
 	if (bl > al) {
 		a = b;
 		al = bl;
 	}
-	for (var i = size; i < al; i++) {
+	for (var i = size; carry && i < al; i++) {
 		var digit = a[i] + carry;
 		sum[i] = digit % 10;
-		carry = floor(digit / 10);
+		carry = (digit / 10) | 0;
 	}
 	if (carry) {
 		sum[i] = carry;
+	}
+
+	for ( ; i < al; i++) {
+		sum[i] = a[i];
 	}
 
 	return new BigInteger(sum, this._s);
@@ -345,9 +348,14 @@ BigInteger.prototype.subtract = function(n) {
 			digit += 10;
 		}
 		else {
+			diff[i++] = digit;
+			break;
 			borrow = 0;
 		}
 		diff[i] = digit;
+	}
+	for ( ; i < al; i++) {
+		diff[i] = a[i];
 	}
 
 	return new BigInteger(diff, sign);
@@ -432,7 +440,6 @@ BigInteger.prototype.multiply = function(n) {
 	var b = (r ? n : this)._d;
 	var al = a.length;
 	var bl = b.length;
-	var floor = Math.floor;
 
 	var pl = al + bl;
 	var partial = new Array(pl);
@@ -443,15 +450,16 @@ BigInteger.prototype.multiply = function(n) {
 	for (var i = 0; i < bl; i++) {
 		var carry = 0;
 		var bi = b[i];
-		for (var j = 0; j < al; j++) {
-			var digit = partial[i+j] + bi * a[j] + carry;
-			carry = floor(digit / 10);
-			partial[i+j] = digit % 10;
+		var jlimit = al + i;
+		for (var j = i; j < jlimit; j++) {
+			var digit = partial[j] + bi * a[j - i] + carry;
+			carry = (digit / 10) | 0;
+			partial[j] = (digit % 10) | 0;
 		}
 		if (carry) {
-			var digit = partial[i+j] + carry;
-			carry = floor(digit / 10);
-			partial[i+j] = digit % 10;
+			var digit = partial[j] + carry;
+			carry = (digit / 10) | 0;
+			partial[j] = digit % 10;
 		}
 	}
 	return new BigInteger(partial, this._s !== n._s ? -1 : 1);
