@@ -3,11 +3,10 @@
 // BigInteger(123):         create a new BigInteger with value 123
 // BigInteger(something):   convert something to a BigInteger if it's not already
 
-// Don't call these:
-// new BigInteger(n):           create a new BigInteger from n (duh!). Prefer function call over this.
+// Don't call this:
 // new BigInteger([3,2,1], -1): create a new BigInteger with value -123. For internal use.
 function BigInteger(n, s) {
-	if (!(this instanceof BigInteger)) {
+	if (s === undefined) {
 		if (n instanceof BigInteger) {
 			return n;
 		}
@@ -17,20 +16,12 @@ function BigInteger(n, s) {
 		return BigInteger.parse(n);
 	}
 
-	if (n instanceof BigInteger) {
-		this._d = n._d.slice();
-		this._s = n._s;
+	while (n.length && !n[n.length - 1]) {
+		--n.length;
 	}
-	else if (s !== undefined) {
-		while (n.length && !n[n.length - 1]) {
-			--n.length;
-		}
-		this._d = n;
-		this._s = n.length ? s : 0;
-	}
-	else {
-		throw new Error("Invalid argument for new BigInteger (call as a function instead)");
-	}
+	this._d = n;
+	this._s = n.length ? s : 0;
+
 	// Keep editor from complaining about not returning
 	return undefined;
 };
@@ -451,19 +442,18 @@ BigInteger.prototype.multiply = function(n) {
 
 	for (var i = 0; i < bl; i++) {
 		var carry = 0;
+		var bi = b[i];
 		for (var j = 0; j < al; j++) {
-			var digit = b[i] * a[j] + carry;
-			partial[i+j] += digit;
-			carry = floor(partial[i+j] / 10);
-			partial[i+j] = partial[i+j] % 10;
+			var digit = partial[i+j] + bi * a[j] + carry;
+			carry = floor(digit / 10);
+			partial[i+j] = digit % 10;
 		}
 		if (carry) {
-			partial[i+j] += carry;
-			carry = floor(partial[i+j] / 10);
-			partial[i+j] = partial[i+j] % 10;
+			var digit = partial[i+j] + carry;
+			carry = floor(digit / 10);
+			partial[i+j] = digit % 10;
 		}
 	}
-	if (carry) partial.push(carry);
 	return new BigInteger(partial, this._s !== n._s ? -1 : 1);
 };
 
