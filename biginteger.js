@@ -465,6 +465,53 @@ BigInteger.prototype.multiply = function(n) {
 	return new BigInteger(partial, this._s !== n._s ? -1 : 1);
 };
 
+// Multiply a BigInteger by a single-digit native number
+// Assumes that this and n are >= 0
+BigInteger.prototype.multiplySingleDigit = function(n) {
+	if (n === 0 || this._s === 0) {
+		return BigInteger.ZERO;
+	}
+	if (n === 1) {
+		return this;
+	}
+
+	if (this._d.length === 1) {
+		var digit = this._d[0] * n;
+		if (digit > 9) return new BigInteger([(digit % 10)|0, (digit / 10)|0], 1);
+		return BigInteger.small[digit];
+	}
+
+	if (n === 2) {
+		return this.add(this);
+	}
+	if (this.isUnit()) {
+		return BigInteger.small[n];
+	}
+
+	var a = this._d;
+	var al = a.length;
+
+	var pl = al + 1;
+	var partial = new Array(pl);
+	for (var i = 0; i < pl; i++) {
+		partial[i] = 0;
+	}
+
+	var carry = 0;
+	for (var j = 0; j < al; j++) {
+		var digit = n * a[j] + carry;
+		carry = (digit / 10) | 0;
+		partial[j] = (digit % 10) | 0;
+	}
+	if (carry) {
+		var digit = carry;
+		carry = (digit / 10) | 0;
+		partial[j] = digit % 10;
+	}
+
+	return new BigInteger(partial, 1);
+};
+
 BigInteger.prototype.square = function() {
 	return this.multiply(this);
 };
@@ -522,7 +569,7 @@ BigInteger.prototype.divMod = function(n) {
 			var guess = 9;
 		}
 		do {
-			var check = a.multiply(small[guess]);
+			var check = a.multiplySingleDigit(guess);
 			if (check.compareAbs(part) <= 0) {
 				break;
 			}
