@@ -1,3 +1,12 @@
+/*
+	JavaScript BigInteger library version 0.9
+	http://jquery.com/
+
+	Copyright (c) 2009 Matthew Crumley
+	Licensed under the MIT license.
+	http://docs.jquery.com/License
+*/
+
 if (!Array.prototype.map) {
 	Array.prototype.map = function(fun /*, thisp*/) {
 		var len = this.length >>> 0;
