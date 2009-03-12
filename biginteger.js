@@ -1,12 +1,32 @@
 /*
 	JavaScript BigInteger library version 0.9
-	http://jquery.com/
 
-	Copyright (c) 2009 Matthew Crumley
+	Copyright (c) 2009 Matthew Crumley <email@matthewcrumley.com>
 	Licensed under the MIT license.
-	http://docs.jquery.com/License
 */
 
+/*
+	Class: BigInteger
+	An arbitrarily-large integer.
+
+	<BigInteger> objects should be considered immutable. None of the "built-in"
+	methods modify *this* or their arguments. All properties should be
+	considered private.
+
+	All the methods of <BigInteger> instances can be called "statically". The
+	static versions are convenient if you don't already have a <BigInteger>
+	object.
+
+	As an example, these calls are equivalent.
+
+	> BigInteger(4).multiply(5); // returns BigIngeger(20);
+	> BigInteger.multiply(4, 5); // returns BigInteger(20);
+
+	> var a = 42;
+	> var a = BigInteger.toJSValue("0b101010"); // Not completely useless...
+*/
+
+// IE doesn't support Array.prototype.map
 if (!Array.prototype.map) {
 	Array.prototype.map = function(fun /*, thisp*/) {
 		var len = this.length >>> 0;
@@ -24,13 +44,41 @@ if (!Array.prototype.map) {
 	};
 }
 
+/*
+	Constructor: BigInteger()
+	Convert a value to a <BigInteger>.
 
-// BigInteger():            get BigInteger.ZERO
-// BigInteger("123"):       create a new BigInteger with value 123
-// BigInteger(123):         create a new BigInteger with value 123
-// BigInteger(something):   convert something to a BigInteger if it's not already
-// Don't call this:
-// new BigInteger([3,2,1], -1): create a new BigInteger with value -123. For internal use.
+	Although <BigInteger()> is the constructor for <BigInteger> objects, it is
+	best not to call it as a constructor. If *n* is a <BigInteger> object, it is
+	simply returned as-is. Otherwise, <BigInteger()> is equivalent to <parse>
+	without a radix argument.
+
+	> var n0 = BigInteger();      // Same as <BigInteger.ZERO>
+	> var n1 = BigInteger("123"); // Create a new <BigInteger> with value 123
+	> var n2 = BigInteger(123);   // Create a new <BigInteger> with value 123
+	> var n3 = BigInteger(n2);    // Return n2, unchanged
+
+	The constructor form only takes an array and a sign. *n* must be an array of
+	numbers in little-endian order, where each digit is between 0 and 9
+	inclusive. A second parameter sets the sign: -1 for negative, +1 for
+	positive, or 0 for zero. The array is *not copied and may be modified*. If
+	the array contains only zeros, the sign parameter is ignored and is forced
+	to zero.
+
+	> new BigInteger([3,2,1], -1): create a new BigInteger with value -123
+
+	Parameters:
+
+		n - Value to convert to a <BigInteger>.
+
+	Returns:
+
+		A <BigInteger> value.
+
+	See Also:
+
+		<parse>, <BigInteger>
+*/
 function BigInteger(n, s) {
 	if (!(this instanceof BigInteger)) {
 		if (n instanceof BigInteger) {
@@ -52,47 +100,37 @@ function BigInteger(n, s) {
 	return undefined;
 };
 
+// Constant: ZERO
+// <BigInteger> 0.
 BigInteger.ZERO = new BigInteger([], 0);
+
+// Constant: ONE
+// <BigInteger> 1.
 BigInteger.ONE = new BigInteger([1], 1);
+
+// Constant: M_ONE
+// <BigInteger> -1.
 BigInteger.M_ONE = new BigInteger(BigInteger.ONE._d, -1);
+
+// Constant: _0
+// Shortcut for <ZERO>.
 BigInteger._0 = BigInteger.ZERO;
+
+// Constant: _1
+// Shortcut for <ONE>.
 BigInteger._1 = BigInteger.ONE;
-BigInteger.digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-BigInteger.prototype.toString = function(base) {
-	base = base || 10;
-	if (base < 2 || base > 36) {
-		throw new Error("illegal radix " + base + ".");
-	}
-	if (this._s === 0) {
-		return "0";
-	}
-	if (base == 10) {
-		// [].reverse() modifies the array, so we need to copy if first
-		return (this._s < 0 ? "-" : "") + (this._d.slice().reverse().join("") || "0");
-	}
-	else {
-		var numerals = BigInteger.digits;
-		base = BigInteger(base);
-		var sign = this._s;
+/*
+	Constant: small
+	Array of <BigIntegers> from 0 to 36.
 
-		var n = this.abs();
-		var digits = [];
-		var digit;
+	These are used internally for parsing, but useful when you need a "small"
+	<BigInteger>.
 
-		while (n._s !== 0) {
-			var divmod = n.divMod(base);
-			n = divmod[0];
-			digit = divmod[1];
-			// TODO: This could be changed to unshift instead of reversing at the end.
-			// Benchmark both to compare speeds.
-			digits.push(numerals[digit]);
-		}
-		return (sign < 0 ? "-" : "") + digits.reverse().join("");
-	}
-};
+	See Also:
 
-// BigIntegers from 0 to 36 (used for parsing up to base 36, but useful when you need a "small" BigInteger)
+		<ZERO>, <ONE>, <_0>, <_1>
+*/
 BigInteger.small = [
 	BigInteger.ZERO,
 	BigInteger.ONE,
@@ -133,6 +171,58 @@ BigInteger.small = [
 	new BigInteger([6,3], 1)
 ];
 
+// Used for parsing/radix conversion
+BigInteger.digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+/*
+	Method: toString
+	Convert a <BigInteger> to a string.
+
+	When *base* is greater than 10, letters are upper case.
+
+	Parameters:
+
+		base - Optional base to represent the number in (default is base 10).
+		       Must be between 2 and 36 inclusive, or an Error will be thrown.
+
+	Returns:
+
+		The string representation of the <BigInteger>.
+*/
+BigInteger.prototype.toString = function(base) {
+	base = base || 10;
+	if (base < 2 || base > 36) {
+		throw new Error("illegal radix " + base + ".");
+	}
+	if (this._s === 0) {
+		return "0";
+	}
+	if (base == 10) {
+		// [].reverse() modifies the array, so we need to copy if first
+		return (this._s < 0 ? "-" : "") + (this._d.slice().reverse().join("") || "0");
+	}
+	else {
+		var numerals = BigInteger.digits;
+		base = BigInteger(base);
+		var sign = this._s;
+
+		var n = this.abs();
+		var digits = [];
+		var digit;
+
+		while (n._s !== 0) {
+			var divmod = n.divMod(base);
+			n = divmod[0];
+			digit = divmod[1];
+			// TODO: This could be changed to unshift instead of reversing at the end.
+			// Benchmark both to compare speeds.
+			digits.push(numerals[digit]);
+		}
+		return (sign < 0 ? "-" : "") + digits.reverse().join("");
+	}
+};
+
+// Verify strings for parsing
 BigInteger.radixRegex = [
 	/^$/,
 	/^$/,
@@ -173,6 +263,38 @@ BigInteger.radixRegex = [
 	/^[0-9a-zA-Z]*$/,
 ];
 
+/*
+	Function: parse
+	Parse a string into a <BigInteger>.
+
+	*base* is optional but, if provided, must be from 2 to 36 inclusive. If
+	*base* is not provided, it will be guessed based on the leading characters
+	of *s* as follows:
+
+	- "0x" or "0X": *base* = 16
+	- "0b" or "0B": *base* = 2
+	- "0": *base* = 8
+	- else: *base* = 10
+
+	If no base is provided, or *base* is 10, the number can be in exponential
+	form. For example, these are all valid:
+
+	> BigInteger.parse("1e9");              // Same as "1000000000"
+	> BigInteger.parse("1.234*10^3");       // Same as 1234
+	> BigInteger.parse("56789 * 10 ** -2"); // Same as 567
+
+	If any characters fall outside the range defined by the radix, an exception
+	will be thrown.
+
+	Parameters:
+
+		s - The string to parse.
+		base - Optional radix (default is to guess based on *s*).
+
+	Returns:
+
+		a <BigInteger> instance.
+*/
 BigInteger.parse = function(s, base) {
 	// Expands a number in exponential form to decimal form.
 	// expandExponential("-13.441*10^5") ===  "1344100"
@@ -260,6 +382,22 @@ BigInteger.parse = function(s, base) {
 	}
 };
 
+/*
+	Function: add
+	Add two <BigIntegers>.
+
+	Parameters:
+
+		n - The number to add to *this*. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		The numbers added together.
+
+	See Also:
+
+		<subtract>, <multiply>, <divide>
+*/
 BigInteger.prototype.add = function(n) {
 	if (this._s === 0) {
 		return BigInteger(n);
@@ -307,14 +445,54 @@ BigInteger.prototype.add = function(n) {
 	return new BigInteger(sum, this._s);
 };
 
+/*
+	Function: negate
+	Get the additive inverse of a <BigInteger>.
+
+	Returns:
+
+		A <BigInteger> with the same magnatude, but with the opposite sign.
+
+	See Also:
+
+		<abs>
+*/
 BigInteger.prototype.negate = function() {
 	return new BigInteger(this._d, -this._s);
 };
 
+/*
+	Function: abs
+	Get the absolute value of a <BigInteger>.
+
+	Returns:
+
+		A <BigInteger> with the same magnatude, but always positive (or zero).
+
+	See Also:
+
+		<negate>
+*/
 BigInteger.prototype.abs = function() {
 	return (this._s < 0) ? this.negate() : this;
 };
 
+/*
+	Function: subtract
+	Subtract two <BigIntegers>.
+
+	Parameters:
+
+		n - The number to subtract from *this*. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		The *n* subtracted from *this*.
+
+	See Also:
+
+		<add>, <multiply>, <divide>
+*/
 BigInteger.prototype.subtract = function(n) {
 	if (this._s === 0) {
 		return BigInteger(n).negate();
@@ -387,6 +565,24 @@ BigInteger.prototype.subtract = function(n) {
 	return new BigInteger(diff, sign);
 };
 
+/*
+	Function: compareAbs
+	Compare the absolute value of two <BigIntegers>.
+
+	Calling <compareAbs> is faster than calling <abs> twice, then <compare>.
+
+	Parameters:
+
+		n - The number to compare to *this*. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		-1, 0, or +1 if *|this|* is less than, equal to, or greater than *|n|*.
+
+	See Also:
+
+		<compare>, <abs>
+*/
 BigInteger.prototype.compareAbs = function(n) {
 	if (this === n) {
 		return 0;
@@ -420,6 +616,22 @@ BigInteger.prototype.compareAbs = function(n) {
 	return 0;
 };
 
+/*
+	Function: compare
+	Compare two <BigIntegers>.
+
+	Parameters:
+
+		n - The number to compare to *this*. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		-1, 0, or +1 if *this* is less than, equal to, or greater than *n*.
+
+	See Also:
+
+		<compareAbs>, <isPositive>, <isNegative>, <isUnit>
+*/
 BigInteger.prototype.compare = function(n) {
 	if (this === n) {
 		return 0;
@@ -440,14 +652,44 @@ BigInteger.prototype.compare = function(n) {
 	}
 };
 
+/*
+	Function: isUnit
+	Return true iff *this* is either 1 or -1.
+
+	Returns:
+
+		true if *this* compares equal to <BigInteger.ONE> or <BigInteger.M_ONE>.
+
+	See Also:
+
+		<isZero>, <isNegative>, <isPositive>, <compareAbs>, <compare>,
+		<BigInteger.ONE>, <BigInteger.M_ONE>
+*/
 BigInteger.prototype.isUnit = function() {
 	return this === BigInteger.ONE ||
 		this === BigInteger.M_ONE ||
 		(this._d.length === 1 && this._d[0] === 1);
 };
 
-// TODO: Consider adding Karatsuba multiplication for large numbers
+/*
+	Function: multiply
+	Multiply two <BigIntegers>.
+
+	Parameters:
+
+		n - The number to multiply *this* by. Will be converted to a
+		<BigInteger>.
+
+	Returns:
+
+		The numbers multiplied together.
+
+	See Also:
+
+		<add>, <subtract>, <divide>, <square>
+*/
 BigInteger.prototype.multiply = function(n) {
+	// TODO: Consider adding Karatsuba multiplication for large numbers
 	if (this._s === 0) {
 		return BigInteger.ZERO;
 	}
@@ -501,6 +743,7 @@ BigInteger.prototype.multiply = function(n) {
 
 // Multiply a BigInteger by a single-digit native number
 // Assumes that this and n are >= 0
+// This is not really intended to be used outside the library itself
 BigInteger.prototype.multiplySingleDigit = function(n) {
 	if (n === 0 || this._s === 0) {
 		return BigInteger.ZERO;
@@ -546,18 +789,95 @@ BigInteger.prototype.multiplySingleDigit = function(n) {
 	return new BigInteger(partial, 1);
 };
 
+/*
+	Function: square
+	Multiply a <BigInteger> by itself.
+
+	In the future, this should be faster than calling <multiply> with
+	*n* == *this*.
+
+	Returns:
+
+		> this.multiply(this)
+
+	See Also:
+		<multiply>
+*/
 BigInteger.prototype.square = function() {
 	return this.multiply(this);
 };
 
+/*
+	Function: divide
+	Divide two <BigIntegers>.
+
+	<divide> throws an exception if *n* is zero.
+
+	Parameters:
+
+		n - The number to divide *this* by. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		The *this* / *n*, truncated to an integer.
+
+	See Also:
+
+		<add>, <subtract>, <multiply>, <divMod>, <mod>
+*/
 BigInteger.prototype.divide = function(n) {
 	return this.divMod(n)[0];
 };
 
+/*
+	Function: mod
+	Calculate the remainder of two <BigIntegers>.
+
+	<divide> throws an exception if *n* is zero.
+
+	Parameters:
+
+		n - The remainder after *this* is divided *this* by *n*. Will be
+		    converted to a <BigInteger>.
+
+	Returns:
+
+		*this* % *n*.
+
+	See Also:
+
+		<divMod>, <divide>
+*/
 BigInteger.prototype.mod = function(n) {
 	return this.divMod(n)[1];
 };
 
+/*
+	Function: divMod
+	Calculate the integer quotient and remainder of two <BigIntegers>.
+
+	<divide> throws an exception if *n* is zero.
+
+	Parameters:
+
+		n - The number to divide *this* by. Will be converted to a <BigInteger>.
+
+	Returns:
+
+		A two-element array containing the quotient and the remainder.
+
+		> a.divMod(b)
+
+		is exactly equivalent to
+
+		> [a.divide(b), a.mod(b)]
+
+		except it is faster, because they are calculated at the same time.
+
+	See Also:
+
+		<divide>, <mod>
+*/
 BigInteger.prototype.divMod = function(n) {
 	n = BigInteger(n);
 	if (n._s === 0) throw new Error("Divide by zero");
@@ -623,28 +943,117 @@ BigInteger.prototype.divMod = function(n) {
 	return [new BigInteger(quot.reverse(), sign), new BigInteger(part._d, this._s)];
 };
 
+/*
+	Function: isEven
+	Return true iff *this* is divisible by two.
+
+	Note that <BigInteger.ZERO> is even.
+
+	Returns:
+
+		true if *this* is even, false otherwise.
+
+	See Also:
+
+		<isOdd>
+*/
 BigInteger.prototype.isEven = function() {
 	var digits = this._d;
-	return digits.length === 0 || (digits[0] % 2) === 0
+	return this._s === 0 || digits.length === 0 || (digits[0] % 2) === 0
 };
 
+/*
+	Function: isOdd
+	Return true iff *this* is not divisible by two.
+
+	Returns:
+
+		true if *this* is odd, false otherwise.
+
+	See Also:
+
+		<isEven>
+*/
 BigInteger.prototype.isOdd = function() {
 	return !this.isEven();
 };
 
+/*
+	Function: isPositive
+	Return true iff *this* > 0.
+
+	Returns:
+
+		true if *this*.compare(<BigInteger.ZERO>) == 1.
+
+	See Also:
+
+		<isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
+*/
 BigInteger.prototype.isPositive = function() {
 	return this._s > 0;
 };
 
+/*
+	Function: isNegative
+	Return true iff *this* < 0.
+
+	Returns:
+
+		true if *this*.compare(<BigInteger.ZERO>) == -1.
+
+	See Also:
+
+		<isPositive>, <isZero>, <isUnit>, <compare>, <BigInteger.ZERO>
+*/
 BigInteger.prototype.isNegative = function() {
 	return this._s < 0;
 };
 
+/*
+	Function: isZero
+	Return true iff *this* == 0.
+
+	Returns:
+
+		true if *this*.compare(<BigInteger.ZERO>) == 0.
+
+	See Also:
+
+		<isPositive>, <isNegative>, <isUnit>, <BigInteger.ZERO>
+*/
 BigInteger.prototype.isZero = function() {
 	return this._s === 0;
 };
 
+/*
+	Function: exp10
+	Multiply a <BigInteger> by a power of 10.
+
+	This is equivalent to, but faster than:
+
+	> if (n >= 0) {
+	>     return this.multiply(BigInteger("1e" + n));
+	> }
+	> else { // n <= 0
+	>     return this.divide(BigInteger("1e" + -n));
+	> }
+
+	Parameters:
+
+		n - The power of 10 to multiply *this* by. Note that *n* is (or will be
+		converted to) a JavaScript number, not a <BigInteger>.
+
+	Returns:
+
+		*this* * (10 ** *n*), truncated to an integer if necessary.
+
+	See Also:
+
+		<pow>, <multiply>
+*/
 BigInteger.prototype.exp10 = function(n) {
+	n = +n;
 	if (n === 0) {
 		return this;
 	}
@@ -660,7 +1069,25 @@ BigInteger.prototype.exp10 = function(n) {
 	return new BigInteger(this._d.slice(-n, this._d.length), this._s);
 };
 
-// 0**0 == 1
+/*
+	Function: pow
+	Raise a <BigInteger> to a power.
+
+	In this implementation, 0**0 is 1.
+
+	Parameters:
+
+		n - The exponent to raise *this* by. *n* must be no greater than
+		<BigInteger.MAX_EXP> (0x7FFFFFFF), or an exception will be thrown.
+
+	Returns:
+
+		*this* raised to the *nth* power.
+
+	See Also:
+
+		<modPow>
+*/
 BigInteger.prototype.pow = function(n) {
 	if (this.isUnit()) {
 		if (this._s > 0) return this;
@@ -699,8 +1126,26 @@ BigInteger.prototype.pow = function(n) {
     return aux;
 };
 
-BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
+/*
+	Function: modPow
+	Raise a <BigInteger> to a power (mod m).
 
+	Because it is reduced by a modulus, <modPow> is not limited by
+	<BigInteger.MAX_EXP> like <pow>.
+
+	Parameters:
+
+		exponent - The exponent to raise *this* by. Must be positive.
+		modulus - The modulus.
+
+	Returns:
+
+		*this* ^ *exponent* (mod *modulus*).
+
+	See Also:
+
+		<pow>, <mod>
+*/
 BigInteger.prototype.modPow = function(exponent, modulus) {
 	var TWO = BigInteger.small[2];
 	var result = BigInteger.ONE;
@@ -718,9 +1163,25 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 	return result;
 };
 
+/*
+	Function: toJSValue
+	Convert a <BigInteger> to a native JavaScript integer.
+
+	Returns:
+
+		> parseInt(this.toString(), 10)
+
+	See Also:
+
+		<toString>
+*/
 BigInteger.prototype.toJSValue = function() {
 	return parseInt(this.toString(), 10);
 };
+
+// Constant: MAX_EXP
+// The largest exponent allowed in <pow>.
+BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 (function() {
 	function makeUnary(fn) {
