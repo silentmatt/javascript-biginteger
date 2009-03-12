@@ -1,8 +1,25 @@
+if (!Array.prototype.map) {
+	Array.prototype.map = function(fun /*, thisp*/) {
+		var len = this.length >>> 0;
+		if (typeof fun != "function") throw new TypeError();
+
+		var res = new Array(len);
+		var thisp = arguments[1];
+		for (var i = 0; i < len; i++) {
+			if (i in this) {
+				res[i] = fun.call(thisp, this[i], i, this);
+			}
+		}
+
+		return res;
+	};
+}
+
+
 // BigInteger():            get BigInteger.ZERO
 // BigInteger("123"):       create a new BigInteger with value 123
 // BigInteger(123):         create a new BigInteger with value 123
 // BigInteger(something):   convert something to a BigInteger if it's not already
-
 // Don't call this:
 // new BigInteger([3,2,1], -1): create a new BigInteger with value -123. For internal use.
 function BigInteger(n, s) {
@@ -166,7 +183,7 @@ BigInteger.parse = function(s, base) {
 	}
 
 	s = s.toString();
-	if (base === undefined || base === 10) {
+	if (base === undefined || base == 10) {
 		s = expandExponential(s);
 	}
 
@@ -610,6 +627,21 @@ BigInteger.prototype.isZero = function() {
 	return this._s === 0;
 };
 
+BigInteger.prototype.exp10 = function(n) {
+	if (n === 0) {
+		return this;
+	}
+	if (n > 0) {
+		var zeros = new Array(n);
+		for (var i = 0; i < n; i++) {
+			zeros[i] = 0;
+		}
+		return new BigInteger(zeros.concat(this._d), this._s);
+	}
+
+	// n < 0
+	return new BigInteger(this._d.slice(-n, this._d.length), this._s);
+};
 
 // 0**0 == 1
 BigInteger.prototype.pow = function(n) {
