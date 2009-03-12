@@ -743,5 +743,9 @@ BigInteger.prototype.toJSValue = function() {
 			var fn = trinary[i];
 			BigInteger[fn] = makeTrinary(BigInteger.prototype[fn]);
 		}
+
+		BigInteger.exp10 = function(x, n) {
+			return BigInteger(x).exp10(n);
+		}
 	})();
 })();
