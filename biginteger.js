@@ -23,7 +23,7 @@ if (!Array.prototype.map) {
 // Don't call this:
 // new BigInteger([3,2,1], -1): create a new BigInteger with value -123. For internal use.
 function BigInteger(n, s) {
-	if (s === undefined) {
+	if (!(this instanceof BigInteger)) {
 		if (n instanceof BigInteger) {
 			return n;
 		}
@@ -379,6 +379,10 @@ BigInteger.prototype.subtract = function(n) {
 };
 
 BigInteger.prototype.compareAbs = function(n) {
+	if (this === n) {
+		return 0;
+	}
+
 	n = BigInteger(n);
 	if (this._s === 0) {
 		return (n._s !== 0) ? -1 : 0;
@@ -408,6 +412,10 @@ BigInteger.prototype.compareAbs = function(n) {
 };
 
 BigInteger.prototype.compare = function(n) {
+	if (this === n) {
+		return 0;
+	}
+
 	n = BigInteger(n);
 
 	if (this._s === 0) {
