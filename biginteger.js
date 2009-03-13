@@ -1,5 +1,6 @@
 /*
 	JavaScript BigInteger library version 0.9
+	http://silentmatt.com/biginteger/
 
 	Copyright (c) 2009 Matthew Crumley <email@matthewcrumley.com>
 	Licensed under the MIT license.
