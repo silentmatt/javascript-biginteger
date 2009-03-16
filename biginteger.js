@@ -834,7 +834,7 @@ BigInteger.prototype.multiply = function(n) {
 // Multiply a BigInteger by a single-digit native number
 // Assumes that this and n are >= 0
 // This is not really intended to be used outside the library itself
-BigInteger.prototype.multiplySingleDigit = function(n) {
+BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 	if (n === 0 || this._s === 0) {
 		return BigInteger.ZERO;
 	}
@@ -842,17 +842,24 @@ BigInteger.prototype.multiplySingleDigit = function(n) {
 		return this;
 	}
 
+	if (cache[n]) {
+		return cache[n];
+	}
+
 	if (this._d.length === 1) {
 		var digit = this._d[0] * n;
 		if (digit > 9) return new BigInteger([(digit % 10)|0, (digit / 10)|0], 1);
-		return BigInteger.small[digit];
+		cache[n] = BigInteger.small[digit];
+		return cache[n];
 	}
 
 	if (n === 2) {
-		return this.add(this);
+		cache[n] = this.add(this);
+		return cache[n];
 	}
 	if (this.isUnit()) {
-		return BigInteger.small[n];
+		cache[n] = BigInteger.small[n];
+		return cache[n];
 	}
 
 	var a = this._d;
@@ -876,7 +883,8 @@ BigInteger.prototype.multiplySingleDigit = function(n) {
 		partial[j] = digit % 10;
 	}
 
-	return new BigInteger(partial, 1);
+	cache[n] = new BigInteger(partial, 1);
+	return cache[n];
 };
 
 /*
@@ -987,25 +995,21 @@ BigInteger.prototype.divMod = function(n) {
 
 	var sign = this._s === n._s ? 1 : -1;
 	var a = n.abs();
-	var b = this.abs();
-	var b_digits = b._d.slice();
-	var digits = a._d.length;
-	var max = b._d.length;
+	var cache = new Array(10);
+	var b_digits = this._d.slice();
+	var digits = n._d.length;
+	var max = b_digits.length;
 	var quot = [];
-	var tries = 1;
-	var dd = digits;
-	var small = BigInteger.small;
 
 	var part = new BigInteger([], 1);
 	part._s = 1;
 
-	for (var i = digits; b_digits.length; i++) {
+	while (b_digits.length) {
 		part._d.unshift(b_digits.pop());
 		part = new BigInteger(part._d, 1);
 
-		if (part.compareAbs(a) < 0) {
+		if (part.compareAbs(n) < 0) {
 			quot.push(0);
-			tries++;
 			continue;
 		}
 		if (part._s === 0) {
@@ -1015,7 +1019,7 @@ BigInteger.prototype.divMod = function(n) {
 			var guess = 9;
 		}
 		do {
-			var check = a.multiplySingleDigit(guess);
+			var check = a.multiplySingleDigit(guess, cache);
 			if (check.compareAbs(part) <= 0) {
 				break;
 			}
@@ -1025,45 +1029,15 @@ BigInteger.prototype.divMod = function(n) {
 		quot.push(guess);
 		if (!guess) continue;
 		var diff = part.subtract(check);
-
 		part._d = diff._d.slice();
-
-		tries = 1;
-		i = digits - 1;
 	}
 
 	return [new BigInteger(quot.reverse(), sign), new BigInteger(part._d, this._s)];
 };
 
-/*
-	Function: divModSmall
-	Calculate the integer quotient and remainder of a <BigInteger> and a small number.
-
-	<divide> throws an exception if *n* is outside of [-9, -1] or [1, 9].
-
-	It's not necessary to call this, since the other division functions will call
-	it if they are able to.
-
-	Parameters:
-
-		n - The number to divide *this* by. *n*'s magnitude must be from 1 to 9.
-
-	Returns:
-
-		A two-element array containing the quotient and the remainder.
-
-		> a.divModSmall(b)
-
-		is exactly equivalent to
-
-		> [a.divide(b), a.mod(b)]
-
-		except it is faster, because they are calculated at the same time.
-
-	See Also:
-
-		<divMod>, <divide>, <mod>
-*/
+// Throws an exception if n is outside of [-9, -1] or [1, 9].
+// It's not necessary to call this, since the other division functions will call
+// it if they are able to.
 BigInteger.prototype.divModSmall = function(n) {
 	n = +n;
 	if (n === 0) {
@@ -1437,9 +1411,6 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 		BigInteger.exp10 = function(x, n) {
 			return BigInteger(x).exp10(n);
-		}
-		BigInteger.divModSmall = function(x, n) {
-			return BigInteger(x).divModSmall(n);
 		}
 	})();
 })();
