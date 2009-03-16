@@ -397,7 +397,7 @@ BigInteger.parse = function(s, base) {
 
 	See Also:
 
-		<subtract>, <multiply>, <divide>
+		<subtract>, <multiply>, <divide>, <next>
 */
 BigInteger.prototype.add = function(n) {
 	if (this._s === 0) {
@@ -492,7 +492,7 @@ BigInteger.prototype.abs = function() {
 
 	See Also:
 
-		<add>, <multiply>, <divide>
+		<add>, <multiply>, <divide>, <prev>
 */
 BigInteger.prototype.subtract = function(n) {
 	if (this._s === 0) {
@@ -555,7 +555,6 @@ BigInteger.prototype.subtract = function(n) {
 		else {
 			diff[i++] = digit;
 			break;
-			borrow = 0;
 		}
 		diff[i] = digit;
 	}
@@ -565,6 +564,96 @@ BigInteger.prototype.subtract = function(n) {
 
 	return new BigInteger(diff, sign);
 };
+
+(function() {
+	function addOne(n, sign) {
+		var a = n._d;
+		var sum = a.slice();
+		var carry = true;
+		var i = 0;
+
+		while (true) {
+			var digit = (a[i] || 0) + 1;
+			sum[i] = digit % 10;
+			if (digit <= 9) {
+				break;
+			}
+			++i;
+		}
+
+		return new BigInteger(sum, sign);
+	}
+
+	function subtractOne(n, sign) {
+		var a = n._d;
+		var sum = a.slice();
+		var borrow = true;
+		var i = 0;
+
+		while (true) {
+			var digit = (a[i] || 0) - 1;
+			if (digit < 0) {
+				sum[i] = digit + 10;
+			}
+			else {
+				sum[i] = digit;
+				break;
+			}
+
+			++i;
+		}
+
+		return new BigInteger(sum, sign);
+	}
+
+	/*
+		Function: next
+		Get the next <BigInteger> (add one).
+
+		Returns:
+
+			*this* + 1.
+
+		See Also:
+
+			<add>, <prev>
+	*/
+	BigInteger.prototype.next = function() {
+		switch (this._s) {
+		case 0:
+			return BigInteger.ONE;
+		case -1:
+			return subtractOne(this, -1);
+		case 1:
+		default:
+			return addOne(this, 1);
+		}
+	};
+
+	/*
+		Function: prev
+		Get the previous <BigInteger> (subtract one).
+
+		Returns:
+
+			*this* - 1.
+
+		See Also:
+
+			<next>, <subtract>
+	*/
+	BigInteger.prototype.prev = function() {
+		switch (this._s) {
+		case 0:
+			return BigInteger.M_ONE;
+		case -1:
+			return addOne(this, -1);
+		case 1:
+		default:
+			return subtractOne(this, 1);
+		}
+	};
+})();
 
 /*
 	Function: compareAbs
@@ -834,7 +923,7 @@ BigInteger.prototype.divide = function(n) {
 	Function: mod
 	Calculate the remainder of two <BigIntegers>.
 
-	<divide> throws an exception if *n* is zero.
+	<mod> throws an exception if *n* is zero.
 
 	Parameters:
 
@@ -857,7 +946,7 @@ BigInteger.prototype.mod = function(n) {
 	Function: divMod
 	Calculate the integer quotient and remainder of two <BigIntegers>.
 
-	<divide> throws an exception if *n* is zero.
+	<divMod> throws an exception if *n* is zero.
 
 	Parameters:
 
@@ -884,7 +973,9 @@ BigInteger.prototype.divMod = function(n) {
 	if (n._s === 0) throw new Error("Divide by zero");
 
 	if (this._s === 0) return [BigInteger.ZERO, BigInteger.ZERO];
-	if (n.isUnit()) return [n._s > 0 ? this : this.negate(), BigInteger.ZERO];
+	if (n._d.length === 1) {
+		return this.divModSmall(n._s * n._d[0]);
+	}
 
 	// Test for easy cases -- |n1| <= |n2|
 	switch (this.compareAbs(n)) {
@@ -945,6 +1036,104 @@ BigInteger.prototype.divMod = function(n) {
 };
 
 /*
+	Function: divModSmall
+	Calculate the integer quotient and remainder of a <BigIntegers> and a small number.
+
+	<divide> throws an exception if *n* is outside of [-9, -1] or [1, 9].
+
+	It's not necessary to call this, since the other division functions will call
+	it if they are able to.
+
+	Parameters:
+
+		n - The number to divide *this* by. *n*'s magnitude must be from 1 to 9.
+
+	Returns:
+
+		A two-element array containing the quotient and the remainder.
+
+		> a.divModSmall(b)
+
+		is exactly equivalent to
+
+		> [a.divide(b), a.mod(b)]
+
+		except it is faster, because they are calculated at the same time.
+
+	See Also:
+
+		<divMod>, <divide>, <mod>
+*/
+BigInteger.prototype.divModSmall = function(n) {
+	n = +n;
+	if (n === 0) {
+		throw new Error("Divide by zero");
+	}
+
+	var n_s = n < 0 ? -1 : 1;
+	var sign = (this._s === n_s) ? 1 : -1;
+	n = Math.abs(n);
+
+	if (n < 1 || n > 9) {
+		throw new Error("Argument out of range");
+	}
+
+	if (this._s === 0) return [BigInteger.ZERO, BigInteger.ZERO];
+
+	if (n === 1 || n === -1) {
+		return [(sign === 1) ? this.abs() : new BigInteger(this._d, sign), BigInteger.ZERO];
+	}
+
+	// 2 <= n <= 9
+
+	// single digit by single digit
+	if (this._d.length === 1) {
+		var q = BigInteger.small[(this._d[0] / n) | 0];
+		var r = BigInteger.small[(this._d[0] % n) | 0];
+		if (sign < 0) {
+			q = q.negate();
+		}
+		if (this._s < 0) {
+			r = r.negate();
+		}
+		return [q, r];
+	}
+
+	var digits = this._d.slice();
+	var quot = [];
+	var part = 0;
+
+	while (digits.length) {
+		part = part * 10 + digits[digits.length - 1];
+		if (part < n) {
+			quot.push(0);
+			digits.pop();
+			diff = 10 * diff + part;
+			continue;
+		}
+		if (part === 0) {
+			var guess = 0;
+		}
+		else {
+			var guess = (part / n) | 0;
+		}
+
+		var check = n * guess;
+		var diff = part - check;
+		quot.push(guess);
+		if (!guess) {
+			digits.pop();
+			continue;
+		}
+
+		digits.pop();
+		part = diff;
+	}
+
+	return [new BigInteger(quot.reverse(), sign), new BigInteger([diff], this._s)];
+};
+
+/*
 	Function: isEven
 	Return true iff *this* is divisible by two.
 
@@ -980,6 +1169,24 @@ BigInteger.prototype.isOdd = function() {
 };
 
 /*
+	Function: sign
+	Get the sign of a <BigInteger>.
+
+	Returns:
+
+		* -1 if *this* < 0
+		* 0 if *this* == 0
+		* +1 if *this* > 0
+
+	See Also:
+
+		<isZero>, <isPositive>, <isNegative>, <compare>, <BigInteger.ZERO>
+*/
+BigInteger.prototype.sign = function() {
+	return this._s;
+};
+
+/*
 	Function: isPositive
 	Return true iff *this* > 0.
 
@@ -989,7 +1196,7 @@ BigInteger.prototype.isOdd = function() {
 
 	See Also:
 
-		<isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
+		<sign>, <isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isPositive = function() {
 	return this._s > 0;
@@ -1005,7 +1212,7 @@ BigInteger.prototype.isPositive = function() {
 
 	See Also:
 
-		<isPositive>, <isZero>, <isUnit>, <compare>, <BigInteger.ZERO>
+		<sign>, <isPositive>, <isZero>, <isUnit>, <compare>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isNegative = function() {
 	return this._s < 0;
@@ -1021,7 +1228,7 @@ BigInteger.prototype.isNegative = function() {
 
 	See Also:
 
-		<isPositive>, <isNegative>, <isUnit>, <BigInteger.ZERO>
+		<sign>, <isPositive>, <isNegative>, <isUnit>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isZero = function() {
 	return this._s === 0;
@@ -1225,6 +1432,9 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 		BigInteger.exp10 = function(x, n) {
 			return BigInteger(x).exp10(n);
+		}
+		BigInteger.divModSmall = function(x, n) {
+			return BigInteger(x).divModSmall(n);
 		}
 	})();
 })();
