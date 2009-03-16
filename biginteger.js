@@ -1037,7 +1037,7 @@ BigInteger.prototype.divMod = function(n) {
 
 /*
 	Function: divModSmall
-	Calculate the integer quotient and remainder of a <BigIntegers> and a small number.
+	Calculate the integer quotient and remainder of a <BigInteger> and a small number.
 
 	<divide> throws an exception if *n* is outside of [-9, -1] or [1, 9].
 
@@ -1086,7 +1086,7 @@ BigInteger.prototype.divModSmall = function(n) {
 
 	// 2 <= n <= 9
 
-	// single digit by single digit
+	// divide a single digit by a single digit
 	if (this._d.length === 1) {
 		var q = BigInteger.small[(this._d[0] / n) | 0];
 		var r = BigInteger.small[(this._d[0] % n) | 0];
@@ -1100,13 +1100,14 @@ BigInteger.prototype.divModSmall = function(n) {
 	}
 
 	var digits = this._d.slice();
-	var quot = [];
+	var quot = new Array(digits.length);
 	var part = 0;
+	var i = 0;
 
 	while (digits.length) {
 		part = part * 10 + digits[digits.length - 1];
 		if (part < n) {
-			quot.push(0);
+			quot[i++] = 0;
 			digits.pop();
 			diff = 10 * diff + part;
 			continue;
@@ -1120,7 +1121,7 @@ BigInteger.prototype.divModSmall = function(n) {
 
 		var check = n * guess;
 		var diff = part - check;
-		quot.push(guess);
+		quot[i++] = guess;
 		if (!guess) {
 			digits.pop();
 			continue;
@@ -1130,7 +1131,11 @@ BigInteger.prototype.divModSmall = function(n) {
 		part = diff;
 	}
 
-	return [new BigInteger(quot.reverse(), sign), new BigInteger([diff], this._s)];
+	var r = BigInteger.small[diff];
+	if (this._s < 0) {
+		r = r.negate();
+	}
+	return [new BigInteger(quot.reverse(), sign), r];
 };
 
 /*
