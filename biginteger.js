@@ -95,7 +95,7 @@ function BigInteger(n, s) {
 		--n.length;
 	}
 	this._d = n;
-	this._s = n.length ? s : 0;
+	this._s = n.length ? (s || 1) : 0;
 
 	// Keep editor from complaining about not returning
 	return undefined;
@@ -379,7 +379,7 @@ BigInteger.parse = function(s, base) {
 		return new BigInteger(d._d, sign);
 	}
 	else {
-		throw new Error("Invalid BigInteger format");
+		throw new Error("Invalid BigInteger format: " + s);
 	}
 };
 
@@ -1228,8 +1228,9 @@ BigInteger.prototype.isZero = function() {
 
 	Parameters:
 
-		n - The power of 10 to multiply *this* by. Note that *n* is (or will be
-		converted to) a JavaScript number, not a <BigInteger>.
+		n - The power of 10 to multiply *this* by. *n* is converted to a
+		javascipt number and must be no greater than <BigInteger.MAX_EXP>
+		(0x7FFFFFFF), or an exception will be thrown.
 
 	Returns:
 
@@ -1243,6 +1244,9 @@ BigInteger.prototype.exp10 = function(n) {
 	n = +n;
 	if (n === 0) {
 		return this;
+	}
+	if (Math.abs(n) >  Number(BigInteger.MAX_EXP)) {
+		throw new Error("exponent too large in BigInteger.exp10");
 	}
 	if (n > 0) {
 		var zeros = new Array(n);
@@ -1390,7 +1394,7 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 	}
 
 	(function() {
-		var unary = "toJSValue,isEven,isOdd,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString".split(",");
+		var unary = "toJSValue,isEven,isOdd,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev".split(",");
 		var binary = "compare,mod,divMod,subtract,add,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
