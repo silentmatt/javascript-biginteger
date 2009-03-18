@@ -1217,7 +1217,7 @@ BigInteger.prototype.isZero = function() {
 	Function: exp10
 	Multiply a <BigInteger> by a power of 10.
 
-	This is equivalent to, but faster than:
+	This is equivalent to, but faster than
 
 	> if (n >= 0) {
 	>     return this.multiply(BigInteger("1e" + n));
@@ -1289,7 +1289,15 @@ BigInteger.prototype.pow = function(n) {
 	if (n._s === 0) {
 		return BigInteger.ONE;
 	}
-	if (this._s === 0 || n._s < 0) {
+	else if (n._s < 0) {
+		if (this._s === 0) {
+			throw new Error("Divide by zero");
+		}
+		else {
+			return BigInteger.ZERO;
+		}
+	}
+	if (this._s === 0) {
 		return BigInteger.ZERO;
 	}
 	if (n.isUnit()) {
@@ -1348,7 +1356,9 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 		}
 
 		exponent = exponent.divide(TWO);
-		base = base.square().mod(modulus);
+		if (exponent.isPositive()) {
+			base = base.square().mod(modulus);
+		}
 	}
 
 	return result;
@@ -1371,7 +1381,7 @@ BigInteger.prototype.toJSValue = function() {
 };
 
 // Constant: MAX_EXP
-// The largest exponent allowed in <pow>.
+// The largest exponent allowed in <pow> and <exp10> (0x7FFFFFFF or 2147483647).
 BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 (function() {
