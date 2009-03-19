@@ -1,3 +1,5 @@
+/*jslint newcap: true, eqeqeq: true, undef: true */
+/*global */
 /*
 	JavaScript BigInteger library version 0.9
 	http://silentmatt.com/biginteger/
@@ -31,7 +33,9 @@
 if (!Array.prototype.map) {
 	Array.prototype.map = function(fun /*, thisp*/) {
 		var len = this.length >>> 0;
-		if (typeof fun != "function") throw new TypeError();
+		if (typeof fun !== "function") {
+			throw new TypeError();
+		}
 
 		var res = new Array(len);
 		var thisp = arguments[1];
@@ -99,7 +103,7 @@ function BigInteger(n, s) {
 
 	// Keep editor from complaining about not returning
 	return undefined;
-};
+}
 
 // Constant: ZERO
 // <BigInteger> 0.
@@ -191,14 +195,14 @@ BigInteger.digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 		The string representation of the <BigInteger>.
 */
 BigInteger.prototype.toString = function(base) {
-	base = base || 10;
+	base = +base || 10;
 	if (base < 2 || base > 36) {
 		throw new Error("illegal radix " + base + ".");
 	}
 	if (this._s === 0) {
 		return "0";
 	}
-	if (base == 10) {
+	if (base === 10) {
 		// [].reverse() modifies the array, so we need to copy if first
 		return (this._s < 0 ? "-" : "") + (this._d.slice().reverse().join("") || "0");
 	}
@@ -261,7 +265,7 @@ BigInteger.radixRegex = [
 	/^[0-9a-wA-W]*$/,
 	/^[0-9a-xA-X]*$/,
 	/^[0-9a-yA-Y]*$/,
-	/^[0-9a-zA-Z]*$/,
+	/^[0-9a-zA-Z]*$/
 ];
 
 /*
@@ -304,22 +308,24 @@ BigInteger.parse = function(s, base) {
 	function expandExponential(str) {
 		str = str.replace(/\s*[*xX]\s*10\s*(\^|\*\*)\s*/, "e");
 
-		return str.replace(/^([+-])?(\d+)\.?(\d*)[eE]([-+]?\d+)$/, function(x, s, n, f, c) {
-			var l = +c < 0;
-			var i = n.length + +c;
-			x = (l ? n : f).length,
-			c = ((c = Math.abs(c)) >= x ? c - x + l : 0),
-			z = (new Array(c + 1)).join("0"), r = n + f;
+		return str.replace(/^([+\-])?(\d+)\.?(\d*)[eE]([+\-]?\d+)$/, function(x, s, n, f, c) {
+			c = +c;
+			var l = c < 0;
+			var i = n.length + c;
+			x = (l ? n : f).length;
+			c = ((c = Math.abs(c)) >= x ? c - x + l : 0);
+			var z = (new Array(c + 1)).join("0");
+			var r = n + f;
 			return (s || "") + (l ? r = z + r : r += z).substr(0, i += l ? z.length : 0) + (i < r.length ? "." + r.substr(i) : "");
 		});
 	}
 
 	s = s.toString();
-	if (base === undefined || base == 10) {
+	if (base === undefined || +base === 10) {
 		s = expandExponential(s);
 	}
 
-	var parts = /^([-+]?)(0[xXbB]?)?([0-9A-Za-z]*)(?:\.\d*)?$/.exec(s);
+	var parts = /^([+\-]?)(0[xXbB]?)?([0-9A-Za-z]*)(?:\.\d*)?$/.exec(s);
 	if (parts) {
 		var sign = parts[1] || "+";
 		var baseSection = parts[2] || "";
@@ -350,6 +356,8 @@ BigInteger.parse = function(s, base) {
 			throw new Error("Illegal radix " + base + ".");
 		}
 
+		base = +base;
+
 		// Check for digits outside the range
 		if (!(BigInteger.radixRegex[base].test(digits))) {
 			throw new Error("Bad digit for radix " + base);
@@ -365,7 +373,7 @@ BigInteger.parse = function(s, base) {
 		sign = (sign === "-") ? -1 : 1;
 
 		// Optimize base 10
-		if (base == 10) {
+		if (base === 10) {
 			return new BigInteger(digits.map(Number).reverse(), sign);
 		}
 
@@ -848,7 +856,9 @@ BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 
 	if (this._d.length === 1) {
 		var digit = this._d[0] * n;
-		if (digit > 9) return new BigInteger([(digit % 10)|0, (digit / 10)|0], 1);
+		if (digit > 9) {
+			return new BigInteger([(digit % 10)|0, (digit / 10)|0], 1);
+		}
 		cache[n] = BigInteger.small[digit];
 		return cache[n];
 	}
@@ -978,9 +988,12 @@ BigInteger.prototype.mod = function(n) {
 */
 BigInteger.prototype.divMod = function(n) {
 	n = BigInteger(n);
-	if (n._s === 0) throw new Error("Divide by zero");
-
-	if (this._s === 0) return [BigInteger.ZERO, BigInteger.ZERO];
+	if (n._s === 0) {
+		throw new Error("Divide by zero");
+	}
+	if (this._s === 0) {
+		return [BigInteger.ZERO, BigInteger.ZERO];
+	}
 	if (n._d.length === 1) {
 		return this.divModSmall(n._s * n._d[0]);
 	}
@@ -1013,7 +1026,7 @@ BigInteger.prototype.divMod = function(n) {
 			continue;
 		}
 		if (part._s === 0) {
-			guess = 0;
+			var guess = 0;
 		}
 		else {
 			var guess = 9;
@@ -1027,7 +1040,9 @@ BigInteger.prototype.divMod = function(n) {
 		} while (guess);
 
 		quot.push(guess);
-		if (!guess) continue;
+		if (!guess) {
+			continue;
+		}
 		var diff = part.subtract(check);
 		part._d = diff._d.slice();
 	}
@@ -1052,7 +1067,9 @@ BigInteger.prototype.divModSmall = function(n) {
 		throw new Error("Argument out of range");
 	}
 
-	if (this._s === 0) return [BigInteger.ZERO, BigInteger.ZERO];
+	if (this._s === 0) {
+		return [BigInteger.ZERO, BigInteger.ZERO];
+	}
 
 	if (n === 1 || n === -1) {
 		return [(sign === 1) ? this.abs() : new BigInteger(this._d, sign), BigInteger.ZERO];
@@ -1076,6 +1093,7 @@ BigInteger.prototype.divModSmall = function(n) {
 	var digits = this._d.slice();
 	var quot = new Array(digits.length);
 	var part = 0;
+	var diff = 0;
 	var i = 0;
 
 	while (digits.length) {
@@ -1094,7 +1112,7 @@ BigInteger.prototype.divModSmall = function(n) {
 		}
 
 		var check = n * guess;
-		var diff = part - check;
+		diff = part - check;
 		quot[i++] = guess;
 		if (!guess) {
 			digits.pop();
@@ -1128,7 +1146,7 @@ BigInteger.prototype.divModSmall = function(n) {
 */
 BigInteger.prototype.isEven = function() {
 	var digits = this._d;
-	return this._s === 0 || digits.length === 0 || (digits[0] % 2) === 0
+	return this._s === 0 || digits.length === 0 || (digits[0] % 2) === 0;
 };
 
 /*
@@ -1281,8 +1299,12 @@ BigInteger.prototype.exp10 = function(n) {
 */
 BigInteger.prototype.pow = function(n) {
 	if (this.isUnit()) {
-		if (this._s > 0) return this;
-		else return BigInteger(n).isOdd() ? this : this.negate();
+		if (this._s > 0) {
+			return this;
+		}
+		else {
+			return BigInteger(n).isOdd() ? this : this.negate();
+		}
 	}
 
 	n = BigInteger(n);
@@ -1388,19 +1410,19 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 	function makeUnary(fn) {
 		return function(a) {
 			return fn.call(BigInteger(a));
-		}
+		};
 	}
 
 	function makeBinary(fn) {
 		return function(a, b) {
 			return fn.call(BigInteger(a), BigInteger(b));
-		}
+		};
 	}
 
 	function makeTrinary(fn) {
 		return function(a, b, c) {
 			return fn.call(BigInteger(a), BigInteger(b), BigInteger(c));
-		}
+		};
 	}
 
 	(function() {
@@ -1425,6 +1447,6 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 		BigInteger.exp10 = function(x, n) {
 			return BigInteger(x).exp10(n);
-		}
+		};
 	})();
 })();
