@@ -1,5 +1,3 @@
-/*jslint newcap: true, eqeqeq: true, undef: true */
-/*global */
 /*
 	JavaScript BigInteger library version 0.9
 	http://silentmatt.com/biginteger/
@@ -607,7 +605,6 @@ BigInteger.prototype.subtract = function(n) {
 				sum[i] = digit;
 				break;
 			}
-
 			++i;
 		}
 
@@ -746,7 +743,7 @@ BigInteger.prototype.compare = function(n) {
 		return cmp * this._s;
 	}
 	else {
-		return this._s < 0 ? -1 : 1;
+		return this._s;
 	}
 };
 
@@ -836,7 +833,7 @@ BigInteger.prototype.multiply = function(n) {
 			partial[j] = digit % 10;
 		}
 	}
-	return new BigInteger(partial, this._s !== n._s ? -1 : 1);
+	return new BigInteger(partial, this._s * n._s);
 };
 
 // Multiply a BigInteger by a single-digit native number
@@ -1006,7 +1003,7 @@ BigInteger.prototype.divMod = function(n) {
 		return [BigInteger.ZERO, this];
 	}
 
-	var sign = this._s === n._s ? 1 : -1;
+	var sign = this._s * n._s;
 	var a = n.abs();
 	var cache = new Array(10);
 	var b_digits = this._d.slice();
@@ -1060,7 +1057,7 @@ BigInteger.prototype.divModSmall = function(n) {
 	}
 
 	var n_s = n < 0 ? -1 : 1;
-	var sign = (this._s === n_s) ? 1 : -1;
+	var sign = this._s * n_s;
 	n = Math.abs(n);
 
 	if (n < 1 || n > 9) {
@@ -1368,7 +1365,6 @@ BigInteger.prototype.pow = function(n) {
 		<pow>, <mod>
 */
 BigInteger.prototype.modPow = function(exponent, modulus) {
-	var TWO = BigInteger.small[2];
 	var result = BigInteger.ONE;
 	var base = this;
 
@@ -1377,7 +1373,7 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 			result = result.multiply(base).mod(modulus);
 		}
 
-		exponent = exponent.divide(TWO);
+		exponent = exponent.divide(BigInteger.small[2]);
 		if (exponent.isPositive()) {
 			base = base.square().mod(modulus);
 		}
