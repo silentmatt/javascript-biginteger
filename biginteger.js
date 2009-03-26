@@ -214,7 +214,7 @@ BigInteger.prototype.toString = function(base) {
 		var digit;
 
 		while (n._s !== 0) {
-			var divmod = n.divMod(base);
+			var divmod = n.divRem(base);
 			n = divmod[0];
 			digit = divmod[1];
 			// TODO: This could be changed to unshift instead of reversing at the end.
@@ -928,17 +928,17 @@ BigInteger.prototype.square = function() {
 
 	See Also:
 
-		<add>, <subtract>, <multiply>, <divMod>, <mod>
+		<add>, <subtract>, <multiply>, <divRem>, <remainder>
 */
 BigInteger.prototype.divide = function(n) {
-	return this.divMod(n)[0];
+	return this.divRem(n)[0];
 };
 
 /*
-	Function: mod
+	Function: remainder
 	Calculate the remainder of two <BigIntegers>.
 
-	<mod> throws an exception if *n* is zero.
+	<remainder> throws an exception if *n* is zero.
 
 	Parameters:
 
@@ -951,17 +951,17 @@ BigInteger.prototype.divide = function(n) {
 
 	See Also:
 
-		<divMod>, <divide>
+		<divRem>, <divide>
 */
-BigInteger.prototype.mod = function(n) {
-	return this.divMod(n)[1];
+BigInteger.prototype.remainder = function(n) {
+	return this.divRem(n)[1];
 };
 
 /*
-	Function: divMod
+	Function: divRem
 	Calculate the integer quotient and remainder of two <BigIntegers>.
 
-	<divMod> throws an exception if *n* is zero.
+	<divRem> throws an exception if *n* is zero.
 
 	Parameters:
 
@@ -971,19 +971,19 @@ BigInteger.prototype.mod = function(n) {
 
 		A two-element array containing the quotient and the remainder.
 
-		> a.divMod(b)
+		> a.divRem(b)
 
 		is exactly equivalent to
 
-		> [a.divide(b), a.mod(b)]
+		> [a.divide(b), a.remainder(b)]
 
 		except it is faster, because they are calculated at the same time.
 
 	See Also:
 
-		<divide>, <mod>
+		<divide>, <remainder>
 */
-BigInteger.prototype.divMod = function(n) {
+BigInteger.prototype.divRem = function(n) {
 	n = BigInteger(n);
 	if (n._s === 0) {
 		throw new Error("Divide by zero");
@@ -992,7 +992,7 @@ BigInteger.prototype.divMod = function(n) {
 		return [BigInteger.ZERO, BigInteger.ZERO];
 	}
 	if (n._d.length === 1) {
-		return this.divModSmall(n._s * n._d[0]);
+		return this.divRemSmall(n._s * n._d[0]);
 	}
 
 	// Test for easy cases -- |n1| <= |n2|
@@ -1050,7 +1050,7 @@ BigInteger.prototype.divMod = function(n) {
 // Throws an exception if n is outside of [-9, -1] or [1, 9].
 // It's not necessary to call this, since the other division functions will call
 // it if they are able to.
-BigInteger.prototype.divModSmall = function(n) {
+BigInteger.prototype.divRemSmall = function(n) {
 	n = +n;
 	if (n === 0) {
 		throw new Error("Divide by zero");
@@ -1370,12 +1370,12 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	while (exponent.isPositive()) {
 		if (exponent.isOdd()) {
-			result = result.multiply(base).mod(modulus);
+			result = result.multiply(base).remainder(modulus);
 		}
 
 		exponent = exponent.divide(BigInteger.small[2]);
 		if (exponent.isPositive()) {
-			base = base.square().mod(modulus);
+			base = base.square().remainder(modulus);
 		}
 	}
 
@@ -1423,7 +1423,7 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 	(function() {
 		var unary = "toJSValue,isEven,isOdd,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev".split(",");
-		var binary = "compare,mod,divMod,subtract,add,divide,multiply,pow,compareAbs".split(",");
+		var binary = "compare,remainder,divRem,subtract,add,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
 		for (var i = 0; i < unary.length; i++) {

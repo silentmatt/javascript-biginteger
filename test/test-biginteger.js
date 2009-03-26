@@ -527,11 +527,11 @@ function testMultiply() {
 	});
 };
 
-function testDivMod() {
-	var divModResults = getAnswers("divMod");
-	runBinaryOperationTest(divModResults, function(a, b) {
+function testDivRem() {
+	var divRemResults = getAnswers("divRem");
+	runBinaryOperationTest(divRemResults, function(a, b) {
 		try {
-			return a.divMod(b).toString();
+			return a.divRem(b).toString();
 		}
 		catch (e) {
 			return e.message;
@@ -704,7 +704,7 @@ TestBigInteger.prototype = {
 	testAdd: testAdd,
 	testSubtract: testSubtract,
 	testMultiply: testMultiply,
-	testDivMod: testDivMod,
+	testDivRem: testDivRem,
 	testExp10: testExp10,
 /* Slow Binary Functions */
 	testPow: testPow,
@@ -721,16 +721,14 @@ TestBigInteger.prototype = {
 /* Trinary Functions */
 	testModPow: testModPow,
 
+/* Keep track of the time for each test */
 	tearDown: function(show) {
 		if (show) {
 			var end = new Date();
 			print("        Completed in " + (end - this.start) + "ms");
 			this.start = new Date();
 		}
-	},
-
-/* Allow trailing commas */
-	dummy: 0
+	}
 };
 
 function generate() {
