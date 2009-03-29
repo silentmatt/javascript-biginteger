@@ -477,7 +477,57 @@ function testToJSValue() {
 		BigInteger.parse("+42", 5).toJSValue(),
 		BigInteger.parse("+42", 5).toJSValue(),
 		BigInteger.parse("12abz", 36).toJSValue(),
-		BigInteger.parse("-0715").toJSValue(),
+		BigInteger.parse("-0715").toJSValue()
+	];
+	var jsarray = [
+		0,
+		-1,
+		-123,
+		456,
+		42,
+		parseInt("2300000", 10),
+		parseInt("3", 10),
+		parseInt("-2300000", 10),
+		parseInt("-34", 10),
+		parseInt("2345000", 10),
+		parseInt("0", 10),
+		parseInt("-342500000000", 10),
+		parseInt("3425", 10),
+		parseInt("DeadBeef", 16),
+		parseInt("-715", 8),
+		parseInt("1101", 2),
+		parseInt("22", 10),
+		parseInt("42", 5),
+		parseInt("12ABZ", 36),
+		parseInt("-461", 10)
+	];
+
+	assertArrayEquals(jsarray, narray);
+	assertArrayEquals(testStrings.map(Number), testValues1.map(Number));
+};
+
+function testValueOf() {
+	var narray = [
+		+new BigInteger([], 1),
+		+BigInteger(-1),
+		+BigInteger(-123),
+		+BigInteger(456),
+		+BigInteger("+42"),
+		+BigInteger("23x10^5"),
+		+BigInteger("342.5 x 10 ^ -2"),
+		+BigInteger("-23x10^5"),
+		+BigInteger("-3425 x 10 ^ -2"),
+		+BigInteger("23.45x10^5"),
+		+BigInteger("3425e-12"),
+		+BigInteger("-3425e8"),
+		+BigInteger("+3425e0"),
+		+BigInteger("0xDeadBeef"),
+		+BigInteger("-0715"),
+		+BigInteger("+0b1101"),
+		+BigInteger.parse("+42", 5),
+		+BigInteger.parse("+42", 5),
+		+BigInteger.parse("12abz", 36),
+		+BigInteger.parse("-0715")
 	];
 	var jsarray = [
 		0,
@@ -694,6 +744,7 @@ TestBigInteger.prototype = {
 	testParseFail: testParseFail,
 	testToString: testToString,
 	testToJSValue: testToJSValue,
+	testValueOf: testValueOf,
 /* Unary Functions */
 	testNegate: testNegate,
 	testNext: testNext,

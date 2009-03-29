@@ -805,6 +805,9 @@ BigInteger.prototype.multiply = function(n) {
 		}
 		return this;
 	}
+	if (this === n) {
+		return this.square();
+	}
 
 	var r = (this._d.length >= n._d.length);
 	var a = (r ? this : n)._d; // a will be longer than b
@@ -898,8 +901,8 @@ BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 	Function: square
 	Multiply a <BigInteger> by itself.
 
-	In the future, this should be faster than calling <multiply> with
-	*n* == *this*.
+	This is slightly faster than regular multiplication, since it removes the
+	duplicated multiplcations.
 
 	Returns:
 
@@ -909,7 +912,56 @@ BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 		<multiply>
 */
 BigInteger.prototype.square = function() {
-	return this.multiply(this);
+	// Normally, squaring a 10-digit number would take 100 multiplications.
+	// Of these 10 are unique diagonals, of the remaining 90 (100-10), 45 are repeated.
+	// This procedure saves (N*(N-1))/2 multiplications, (e.g., 45 of 100 multiplies).
+	// Based on code by Gary Darby, Intellitech Systems Inc., www.DelphiForFun.org
+
+	if (this._s === 0) {
+		return BigInteger.ZERO;
+	}
+	if (this.isUnit()) {
+		return BigInteger.ONE;
+	}
+
+	var digits = this._d;
+	var length = digits.length;
+	var imult1 = new Array(length + length + 1);
+	var product, carry, k;
+
+	// Calculate diagonal
+	for (var i = 0; i < length; i++) {
+		k = i * 2;
+		product = digits[i] * digits[i];
+		carry = (product / 10) | 0;
+		imult1[k] = product - carry * 10;
+		imult1[k + 1] = carry;
+	}
+
+	// Calculate repeating part
+	for (var i = 0; i < length; i++) {
+		carry = 0;
+		k = i * 2 + 1;
+		for (var j = i + 1; j < length; j++, k++) {
+			product = digits[j] * digits[i] * 2 + imult1[k] + carry;
+			carry = (product / 10) | 0;
+			imult1[k] = product - carry * 10;
+		}
+		k = length + i;
+		imult1[k] = carry + imult1[k];
+	}
+
+	// Fix the base
+	length = imult1.length - 1;
+	carry  = 0;
+	for (var i = 0; i < length; i++) {
+		product = imult1[i] + carry;
+		carry = (product / 10) | 0;
+		imult1[i] = product - carry * 10;
+	}
+	imult1[length] = carry;
+
+	return new BigInteger(imult1, 1);
 };
 
 /*
@@ -1383,8 +1435,11 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 };
 
 /*
-	Function: toJSValue
+	Function: valueOf
 	Convert a <BigInteger> to a native JavaScript integer.
+
+	This is called automatically by JavaScipt to convert a <BigInteger> to a
+	native value.
 
 	Returns:
 
@@ -1392,7 +1447,25 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	See Also:
 
-		<toString>
+		<toString>, <toJSValue>
+*/
+BigInteger.prototype.valueOf = function() {
+	return parseInt(this.toString(), 10);
+};
+
+/*
+	Function: toJSValue
+	Convert a <BigInteger> to a native JavaScript integer.
+
+	This is the same as valueOf, but more explicitly named.
+
+	Returns:
+
+		> parseInt(this.toString(), 10)
+
+	See Also:
+
+		<toString>, <valueOf>
 */
 BigInteger.prototype.toJSValue = function() {
 	return parseInt(this.toString(), 10);
