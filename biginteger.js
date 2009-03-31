@@ -934,7 +934,7 @@ BigInteger.prototype.square = function() {
 		k = i * 2;
 		product = digits[i] * digits[i];
 		carry = (product / 10) | 0;
-		imult1[k] = product - carry * 10;
+		imult1[k] = product % 10;
 		imult1[k + 1] = carry;
 	}
 
@@ -945,21 +945,14 @@ BigInteger.prototype.square = function() {
 		for (var j = i + 1; j < length; j++, k++) {
 			product = digits[j] * digits[i] * 2 + imult1[k] + carry;
 			carry = (product / 10) | 0;
-			imult1[k] = product - carry * 10;
+			imult1[k] = product % 10;
 		}
 		k = length + i;
-		imult1[k] = carry + imult1[k];
+		var digit = carry + imult1[k];
+		carry = (digit / 10) | 0;
+		imult1[k] = digit % 10;
+		imult1[k + 1] += carry;
 	}
-
-	// Fix the base
-	length = imult1.length - 1;
-	carry  = 0;
-	for (var i = 0; i < length; i++) {
-		product = imult1[i] + carry;
-		carry = (product / 10) | 0;
-		imult1[i] = product - carry * 10;
-	}
-	imult1[length] = carry;
 
 	return new BigInteger(imult1, 1);
 };
