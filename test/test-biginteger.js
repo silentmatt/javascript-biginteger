@@ -2,6 +2,7 @@ load("../biginteger.js");
 load("test.js");
 
 load("testValues.js");
+load("powValues.js");
 
 function getAnswers(file) {
 	file = "expected/" + file + ".js";
@@ -13,6 +14,28 @@ function getAnswers(file) {
 	}
 	return answers;
 }
+
+var addResults = getAnswers("add");
+var subtractResults = getAnswers("subtract");
+var multiplyResults = getAnswers("multiply");
+var divRemResults = getAnswers("divRem");
+var negateResults = getAnswers("negate");
+var nextResults = getAnswers("next");
+var prevResults = getAnswers("prev");
+var absResults = getAnswers("abs");
+var compareAbsResults = getAnswers("compareAbs");
+var compareResults = getAnswers("compare");
+var isUnitResults = getAnswers("isUnit");
+var isZeroResults = getAnswers("isZero");
+var isPositiveResults = getAnswers("isPositive");
+var isNegativeResults = getAnswers("isNegative");
+var squareResults = getAnswers("square");
+var isEvenResults = getAnswers("isEven");
+var isOddResults = getAnswers("isOdd");
+var signResults = getAnswers("sign");
+var exp10Results = getAnswers("exp10");
+var powResults = getAnswers("pow");
+var modPowResults = getAnswers("modPow");
 
 function runUnaryOperationTest(expect, test, values) {
 	values = values || testValues1;
@@ -557,28 +580,24 @@ function testValueOf() {
 };
 
 function testAdd() {
-	var addResults = getAnswers("add");
 	runBinaryOperationTest(addResults, function(a, b) {
 		return a.add(b).toString();
 	});
 };
 
 function testSubtract() {
-	var subtractResults = getAnswers("subtract");
 	runBinaryOperationTest(subtractResults, function(a, b) {
 		return a.subtract(b).toString();
 	});
 };
 
 function testMultiply() {
-	var multiplyResults = getAnswers("multiply");
 	runBinaryOperationTest(multiplyResults, function(a, b) {
 		return a.multiply(b).toString();
 	});
 };
 
 function testDivRem() {
-	var divRemResults = getAnswers("divRem");
 	runBinaryOperationTest(divRemResults, function(a, b) {
 		try {
 			return a.divRem(b).toString();
@@ -590,105 +609,90 @@ function testDivRem() {
 };
 
 function testNegate() {
-	var negateResults = getAnswers("negate");
 	runUnaryOperationTest(negateResults, function(a) {
 		return a.negate().toString();
 	});
 };
 
 function testNext() {
-	var nextResults = getAnswers("next");
 	runUnaryOperationTest(nextResults, function(a) {
 		return a.next().toString();
 	});
 };
 
 function testPrev() {
-	var prevResults = getAnswers("prev");
 	runUnaryOperationTest(prevResults, function(a) {
 		return a.prev().toString();
 	});
 };
 
 function testAbs() {
-	var absResults = getAnswers("abs");
 	runUnaryOperationTest(absResults, function(a) {
 		return a.abs().toString();
 	});
 };
 
 function testCompareAbs() {
-	var compareAbsResults = getAnswers("compareAbs");
 	runBinaryOperationTest(compareAbsResults, function(a, b) {
 		return a.compareAbs(b);
 	});
 };
 
 function testCompare() {
-	var compareResults = getAnswers("compare");
 	runBinaryOperationTest(compareResults, function(a, b) {
 		return a.compare(b);
 	});
 };
 
 function testIsUnit() {
-	var isUnitResults = getAnswers("isUnit");
 	runUnaryOperationTest(isUnitResults, function(a) {
 		return a.isUnit();
 	});
 };
 
 function testIsZero() {
-	var isZeroResults = getAnswers("isZero");
 	runUnaryOperationTest(isZeroResults, function(a) {
 		return a.isZero();
 	});
 };
 
 function testIsPositive() {
-	var isPositiveResults = getAnswers("isPositive");
 	runUnaryOperationTest(isPositiveResults, function(a) {
 		return a.isPositive();
 	});
 };
 
 function testIsNegative() {
-	var isNegativeResults = getAnswers("isNegative");
 	runUnaryOperationTest(isNegativeResults, function(a) {
 		return a.isNegative();
 	});
 };
 
 function testSquare() {
-	var squareResults = getAnswers("square");
 	runUnaryOperationTest(squareResults, function(a) {
 		return a.square().toString();
 	});
 };
 
 function testIsEven() {
-	var isEvenResults = getAnswers("isEven");
 	runUnaryOperationTest(isEvenResults, function(a) {
 		return a.isEven();
 	});
 };
 
 function testIsOdd() {
-	var isOddResults = getAnswers("isOdd");
 	runUnaryOperationTest(isOddResults, function(a) {
 		return a.isOdd();
 	});
 };
 
 function testSign() {
-	var signResults = getAnswers("sign");
 	runUnaryOperationTest(signResults, function(a) {
 		return a.sign();
 	});
 };
 
 function testExp10() {
-	var exp10Results = getAnswers("exp10");
 	runShortBinaryOperationTest(exp10Results, function(a, b) {
 		if (Math.abs(Number(b)) > 1000) {
 			b = Number(BigInteger.MAX_EXP.next());
@@ -703,8 +707,6 @@ function testExp10() {
 };
 
 function testPow() {
-	load("powValues.js");
-	var powResults = getAnswers("pow");
 	runBinaryOperationTest(powResults, function(a, b) {
 		try {
 			return a.pow(b).toString();
@@ -717,8 +719,6 @@ function testPow() {
 };
 
 function testModPow() {
-	load("powValues.js");
-	var modPowResults = getAnswers("modPow");
 	runTrinaryOperationTest(modPowResults, function(a, b, c) {
 		try {
 			return a.modPow(b, c).toString();
