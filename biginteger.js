@@ -87,7 +87,7 @@ function BigInteger(n, s) {
 		if (n instanceof BigInteger) {
 			return n;
 		}
-		else if (n === undefined) {
+		else if (typeof n === "undefined") {
 			return BigInteger.ZERO;
 		}
 		return BigInteger.parse(n);
@@ -98,9 +98,6 @@ function BigInteger(n, s) {
 	}
 	this._d = n;
 	this._s = n.length ? (s || 1) : 0;
-
-	// Keep editor from complaining about not returning
-	return undefined;
 }
 
 // Constant: ZERO
@@ -319,7 +316,7 @@ BigInteger.parse = function(s, base) {
 	}
 
 	s = s.toString();
-	if (base === undefined || +base === 10) {
+	if (typeof base === "undefined" || +base === 10) {
 		s = expandExponential(s);
 	}
 
@@ -329,7 +326,7 @@ BigInteger.parse = function(s, base) {
 		var baseSection = parts[2] || "";
 		var digits = parts[3] || "";
 
-		if (base === undefined) {
+		if (typeof base === "undefined") {
 			// Guess base
 			if (baseSection === "0") { // Octal, or just 0
 				if (digits.length === 0) {
