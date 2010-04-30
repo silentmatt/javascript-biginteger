@@ -297,7 +297,7 @@ BigInteger.radixRegex = [
 */
 BigInteger.parse = function(s, base) {
 	// Expands a number in exponential form to decimal form.
-	// expandExponential("-13.441*10^5") ===  "1344100"
+	// expandExponential("-13.441*10^5") === "1344100";
 	// expandExponential("1.12300e-1") === "0.112300";
 	// expandExponential(1000000000000000000000000000000) === "1000000000000000000000000000000";
 	function expandExponential(str) {
@@ -423,9 +423,10 @@ BigInteger.prototype.add = function(n) {
 	var sum = new Array(Math.max(al, bl) + 1);
 	var size = Math.min(al, bl);
 	var carry = 0;
+	var digit;
 
 	for (var i = 0; i < size; i++) {
-		var digit = a[i] + b[i] + carry;
+		digit = a[i] + b[i] + carry;
 		sum[i] = digit % 10;
 		carry = (digit / 10) | 0;
 	}
@@ -433,8 +434,8 @@ BigInteger.prototype.add = function(n) {
 		a = b;
 		al = bl;
 	}
-	for (var i = size; carry && i < al; i++) {
-		var digit = a[i] + carry;
+	for (i = size; carry && i < al; i++) {
+		digit = a[i] + carry;
 		sum[i] = digit % 10;
 		carry = (digit / 10) | 0;
 	}
@@ -512,9 +513,10 @@ BigInteger.prototype.subtract = function(n) {
 	}
 
 	var m = this;
+	var t;
 	// negative - negative => -|a| - -|b| => -|a| + |b| => |b| - |a|
 	if (this._s < 0) {
-		var t = m;
+		t = m;
 		m = new BigInteger(n._d, 1);
 		n = new BigInteger(t._d, 1);
 	}
@@ -526,7 +528,7 @@ BigInteger.prototype.subtract = function(n) {
 	}
 	else if (sign < 0) {
 		// swap m and n
-		var t = n;
+		t = n;
 		n = m;
 		m = t;
 	}
@@ -538,9 +540,11 @@ BigInteger.prototype.subtract = function(n) {
 	var bl = b.length;
 	var diff = new Array(al); // al >= bl since a > b
 	var borrow = 0;
+	var i;
+	var digit;
 
-	for (var i = 0; i < bl; i++) {
-		var digit = a[i] - borrow - b[i];
+	for (i = 0; i < bl; i++) {
+		digit = a[i] - borrow - b[i];
 		if (digit < 0) {
 			digit += 10;
 			borrow = 1;
@@ -550,8 +554,8 @@ BigInteger.prototype.subtract = function(n) {
 		}
 		diff[i] = digit;
 	}
-	for (var i = bl; i < al; i++) {
-		var digit = a[i] - borrow;
+	for (i = bl; i < al; i++) {
+		digit = a[i] - borrow;
 		if (digit < 0) {
 			digit += 10;
 		}
@@ -626,7 +630,7 @@ BigInteger.prototype.subtract = function(n) {
 			return BigInteger.ONE;
 		case -1:
 			return subtractOne(this, -1);
-		case 1:
+		// case 1:
 		default:
 			return addOne(this, 1);
 		}
@@ -650,7 +654,7 @@ BigInteger.prototype.subtract = function(n) {
 			return BigInteger.M_ONE;
 		case -1:
 			return addOne(this, -1);
-		case 1:
+		// case 1:
 		default:
 			return subtractOne(this, 1);
 		}
@@ -814,21 +818,23 @@ BigInteger.prototype.multiply = function(n) {
 
 	var pl = al + bl;
 	var partial = new Array(pl);
-	for (var i = 0; i < pl; i++) {
+	var i;
+	for (i = 0; i < pl; i++) {
 		partial[i] = 0;
 	}
 
-	for (var i = 0; i < bl; i++) {
+	for (i = 0; i < bl; i++) {
 		var carry = 0;
 		var bi = b[i];
 		var jlimit = al + i;
+		var digit;
 		for (var j = i; j < jlimit; j++) {
-			var digit = partial[j] + bi * a[j - i] + carry;
+			digit = partial[j] + bi * a[j - i] + carry;
 			carry = (digit / 10) | 0;
 			partial[j] = (digit % 10) | 0;
 		}
 		if (carry) {
-			var digit = partial[j] + carry;
+			digit = partial[j] + carry;
 			carry = (digit / 10) | 0;
 			partial[j] = digit % 10;
 		}
@@ -851,8 +857,9 @@ BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 		return cache[n];
 	}
 
+	var digit;
 	if (this._d.length === 1) {
-		var digit = this._d[0] * n;
+		digit = this._d[0] * n;
 		if (digit > 9) {
 			return new BigInteger([(digit % 10)|0, (digit / 10)|0], 1);
 		}
@@ -880,12 +887,12 @@ BigInteger.prototype.multiplySingleDigit = function(n, cache) {
 
 	var carry = 0;
 	for (var j = 0; j < al; j++) {
-		var digit = n * a[j] + carry;
+		digit = n * a[j] + carry;
 		carry = (digit / 10) | 0;
 		partial[j] = (digit % 10) | 0;
 	}
 	if (carry) {
-		var digit = carry;
+		digit = carry;
 		carry = (digit / 10) | 0;
 		partial[j] = digit % 10;
 	}
@@ -925,9 +932,10 @@ BigInteger.prototype.square = function() {
 	var length = digits.length;
 	var imult1 = new Array(length + length + 1);
 	var product, carry, k;
+	var i;
 
 	// Calculate diagonal
-	for (var i = 0; i < length; i++) {
+	for (i = 0; i < length; i++) {
 		k = i * 2;
 		product = digits[i] * digits[i];
 		carry = (product / 10) | 0;
@@ -936,7 +944,7 @@ BigInteger.prototype.square = function() {
 	}
 
 	// Calculate repeating part
-	for (var i = 0; i < length; i++) {
+	for (i = 0; i < length; i++) {
 		carry = 0;
 		k = i * 2 + 1;
 		for (var j = i + 1; j < length; j++, k++) {
@@ -1052,6 +1060,7 @@ BigInteger.prototype.divRem = function(n) {
 	var digits = n._d.length;
 	var max = b_digits.length;
 	var quot = [];
+	var guess;
 
 	var part = new BigInteger([], 1);
 	part._s = 1;
@@ -1065,10 +1074,10 @@ BigInteger.prototype.divRem = function(n) {
 			continue;
 		}
 		if (part._s === 0) {
-			var guess = 0;
+			guess = 0;
 		}
 		else {
-			var guess = 9;
+			guess = 9;
 		}
 		do {
 			var check = a.multiplySingleDigit(guess, cache);
@@ -1093,6 +1102,7 @@ BigInteger.prototype.divRem = function(n) {
 // It's not necessary to call this, since the other division functions will call
 // it if they are able to.
 BigInteger.prototype.divRemSmall = function(n) {
+	var r;
 	n = +n;
 	if (n === 0) {
 		throw new Error("Divide by zero");
@@ -1119,7 +1129,7 @@ BigInteger.prototype.divRemSmall = function(n) {
 	// divide a single digit by a single digit
 	if (this._d.length === 1) {
 		var q = BigInteger.small[(this._d[0] / n) | 0];
-		var r = BigInteger.small[(this._d[0] % n) | 0];
+		r = BigInteger.small[(this._d[0] % n) | 0];
 		if (sign < 0) {
 			q = q.negate();
 		}
@@ -1134,6 +1144,7 @@ BigInteger.prototype.divRemSmall = function(n) {
 	var part = 0;
 	var diff = 0;
 	var i = 0;
+	var guess;
 
 	while (digits.length) {
 		part = part * 10 + digits[digits.length - 1];
@@ -1144,10 +1155,10 @@ BigInteger.prototype.divRemSmall = function(n) {
 			continue;
 		}
 		if (part === 0) {
-			var guess = 0;
+			guess = 0;
 		}
 		else {
-			var guess = (part / n) | 0;
+			guess = (part / n) | 0;
 		}
 
 		var check = n * guess;
@@ -1162,7 +1173,7 @@ BigInteger.prototype.divRemSmall = function(n) {
 		part = diff;
 	}
 
-	var r = BigInteger.small[diff];
+	r = BigInteger.small[diff];
 	if (this._s < 0) {
 		r = r.negate();
 	}
@@ -1302,7 +1313,7 @@ BigInteger.prototype.exp10 = function(n) {
 	if (n === 0) {
 		return this;
 	}
-	if (Math.abs(n) >  Number(BigInteger.MAX_EXP)) {
+	if (Math.abs(n) > Number(BigInteger.MAX_EXP)) {
 		throw new Error("exponent too large in BigInteger.exp10");
 	}
 	if (n > 0) {
@@ -1381,9 +1392,9 @@ BigInteger.prototype.pow = function(n) {
 		}
 		x = x.square();
 		n = n.divide(two);
-    }
+	}
 
-    return aux;
+	return aux;
 };
 
 /*
@@ -1485,22 +1496,23 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 	}
 
 	(function() {
+		var i, fn;
 		var unary = "toJSValue,isEven,isOdd,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev".split(",");
 		var binary = "compare,remainder,divRem,subtract,add,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
-		for (var i = 0; i < unary.length; i++) {
-			var fn = unary[i];
+		for (i = 0; i < unary.length; i++) {
+			fn = unary[i];
 			BigInteger[fn] = makeUnary(BigInteger.prototype[fn]);
 		}
 
-		for (var i = 0; i < binary.length; i++) {
-			var fn = binary[i];
+		for (i = 0; i < binary.length; i++) {
+			fn = binary[i];
 			BigInteger[fn] = makeBinary(BigInteger.prototype[fn]);
 		}
 
-		for (var i = 0; i < trinary.length; i++) {
-			var fn = trinary[i];
+		for (i = 0; i < trinary.length; i++) {
+			fn = trinary[i];
 			BigInteger[fn] = makeTrinary(BigInteger.prototype[fn]);
 		}
 
