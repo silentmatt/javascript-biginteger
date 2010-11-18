@@ -200,7 +200,7 @@ function testConversion() {
 	var n = BigInteger("0xDeadBeef");
 	checkBigInteger(n, [9,5,5,8,2,9,5,3,7,3], 1);
 
-	var n = BigInteger("-0715");
+	var n = BigInteger("-0c715");
 	checkBigInteger(n, [1,6,4], -1);
 
 	var n = BigInteger("+0b1101");
@@ -263,10 +263,10 @@ function testParse() {
 	n = BigInteger.parse("12abz", 36);
 	checkBigInteger(n, [9,1,3,6,8,7,1], 1);
 
-	n = BigInteger.parse("-0715");
+	n = BigInteger.parse("-0c715");
 	checkBigInteger(n, [1,6,4], -1);
 
-	n = BigInteger.parse("-0715", 10);
+	n = BigInteger.parse("-0C715", 10);
 	checkBigInteger(n, [5,1,7], -1);
 
 	n = BigInteger.parse("+0b1101");
@@ -425,12 +425,12 @@ function testToString() {
 		BigInteger("-3425e8"),
 		BigInteger("+3425e0").toString(10),
 		BigInteger("0xDeadBeef").toString(16),
-		BigInteger("-0715").toString(8),
+		BigInteger("-0c715").toString(8),
 		BigInteger("+0b1101").toString(2),
 		BigInteger.parse("+42", 5).toString(10),
 		BigInteger.parse("+42", 5).toString(5),
 		BigInteger.parse("12abz", 36).toString(36),
-		BigInteger.parse("-0715"),
+		BigInteger.parse("-0c715"),
 	];
 	var sarray = [
 		"0",
@@ -495,12 +495,12 @@ function testToJSValue() {
 		BigInteger("-3425e8").toJSValue(),
 		BigInteger("+3425e0").toJSValue(),
 		BigInteger("0xDeadBeef").toJSValue(),
-		BigInteger("-0715").toJSValue(),
+		BigInteger("-0c715").toJSValue(),
 		BigInteger("+0b1101").toJSValue(),
 		BigInteger.parse("+42", 5).toJSValue(),
 		BigInteger.parse("+42", 5).toJSValue(),
 		BigInteger.parse("12abz", 36).toJSValue(),
-		BigInteger.parse("-0715").toJSValue()
+		BigInteger.parse("-0C715").toJSValue()
 	];
 	var jsarray = [
 		0,
@@ -545,12 +545,12 @@ function testValueOf() {
 		+BigInteger("-3425e8"),
 		+BigInteger("+3425e0"),
 		+BigInteger("0xDeadBeef"),
-		+BigInteger("-0715"),
+		+BigInteger("-0c715"),
 		+BigInteger("+0b1101"),
 		+BigInteger.parse("+42", 5),
 		+BigInteger.parse("+42", 5),
 		+BigInteger.parse("12abz", 36),
-		+BigInteger.parse("-0715")
+		+BigInteger.parse("-0c715")
 	];
 	var jsarray = [
 		0,

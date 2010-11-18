@@ -272,8 +272,8 @@ BigInteger.radixRegex = [
 	of *s* as follows:
 
 	- "0x" or "0X": *base* = 16
+	- "0c" or "0C": *base* = 8
 	- "0b" or "0B": *base* = 2
-	- "0": *base* = 8
 	- else: *base* = 10
 
 	If no base is provided, or *base* is 10, the number can be in exponential
@@ -320,7 +320,7 @@ BigInteger.parse = function(s, base) {
 		s = expandExponential(s);
 	}
 
-	var parts = /^([+\-]?)(0[xXbB]?)?([0-9A-Za-z]*)(?:\.\d*)?$/.exec(s);
+	var parts = /^([+\-]?)(0[xXcCbB])?([0-9A-Za-z]*)(?:\.\d*)?$/.exec(s);
 	if (parts) {
 		var sign = parts[1] || "+";
 		var baseSection = parts[2] || "";
@@ -328,17 +328,11 @@ BigInteger.parse = function(s, base) {
 
 		if (typeof base === "undefined") {
 			// Guess base
-			if (baseSection === "0") { // Octal, or just 0
-				if (digits.length === 0) {
-					base = 10;
-					digits = "0";
-				}
-				else {
-					base = 8;
-				}
-			}
-			else if (baseSection === "0x" || baseSection === "0X") { // Hex
+			if (baseSection === "0x" || baseSection === "0X") { // Hex
 				base = 16;
+			}
+			else if (baseSection === "0c" || baseSection === "0C") { // Octal
+				base = 8;
 			}
 			else if (baseSection === "0b" || baseSection === "0B") { // Binary
 				base = 2;
