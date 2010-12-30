@@ -1515,3 +1515,7 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 		};
 	})();
 })();
+
+if (typeof exports !== 'undefined') {
+	exports.BigInteger = BigInteger;
+}
