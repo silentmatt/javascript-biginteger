@@ -1491,7 +1491,7 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 
 	(function() {
 		var i, fn;
-		var unary = "toJSValue,isEven,isOdd,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev".split(",");
+		var unary = "toJSValue,isEven,isOdd,sign,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev".split(",");
 		var binary = "compare,remainder,divRem,subtract,add,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
