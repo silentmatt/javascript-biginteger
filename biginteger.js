@@ -20,7 +20,7 @@
 
 	As an example, these calls are equivalent.
 
-	> BigInteger(4).multiply(5); // returns BigIngeger(20);
+	> BigInteger(4).multiply(5); // returns BigInteger(20);
 	> BigInteger.multiply(4, 5); // returns BigInteger(20);
 
 	> var a = 42;
