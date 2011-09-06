@@ -159,52 +159,52 @@ function testConversion() {
 	checkBigInteger(n, [1], -1);
 
 	var n = BigInteger(-123);
-	checkBigInteger(n, [3,2,1], -1);
+	checkBigInteger(n, [123], -1);
 
 	var n = BigInteger(456);
-	checkBigInteger(n, [6, 5, 4], 1);
+	checkBigInteger(n, [456], 1);
 
 	var n = BigInteger("+42");
-	checkBigInteger(n, [2, 4], 1);
+	checkBigInteger(n, [42], 1);
 
 	var n = BigInteger("23x10^5");
-	checkBigInteger(n, [0,0,0,0,0,3,2], 1);
+	checkBigInteger(n, [2300000], 1);
 
 	var n = BigInteger("3425 x 10 ^ -2");
-	checkBigInteger(n, [4,3], 1);
+	checkBigInteger(n, [34], 1);
 
 	var n = BigInteger("342.5 x 10 ^ -2");
 	checkBigInteger(n, [3], 1);
 
 	var n = BigInteger("-23x10^5");
-	checkBigInteger(n, [0,0,0,0,0,3,2], -1);
+	checkBigInteger(n, [2300000], -1);
 
 	var n = BigInteger("-3425 x 10 ^ -2");
-	checkBigInteger(n, [4,3], -1);
+	checkBigInteger(n, [34], -1);
 
 	var n = BigInteger("23.45x10^5");
-	checkBigInteger(n, [0,0,0,5,4,3,2], 1);
+	checkBigInteger(n, [2345000], 1);
 
 	var n = BigInteger("3425e-12");
 	checkBigInteger(n, [], 0);
 
 	var n = BigInteger("-3425e8");
-	checkBigInteger(n, [0,0,0,0,0,0,0,0,5,2,4,3], -1);
+	checkBigInteger(n, [0, 34250], -1);
 
 	var n = BigInteger("3425e-12");
 	checkBigInteger(n, [], 0);
 
 	var n = BigInteger("+3425e0");
-	checkBigInteger(n, [5,2,4,3], 1);
+	checkBigInteger(n, [3425], 1);
 
 	var n = BigInteger("0xDeadBeef");
-	checkBigInteger(n, [9,5,5,8,2,9,5,3,7,3], 1);
+	checkBigInteger(n, [5928559, 373], 1);
 
 	var n = BigInteger("-0c715");
-	checkBigInteger(n, [1,6,4], -1);
+	checkBigInteger(n, [461], -1);
 
 	var n = BigInteger("+0b1101");
-	checkBigInteger(n, [3,1], 1);
+	checkBigInteger(n, [13], 1);
 };
 
 function testParse() {
@@ -222,91 +222,91 @@ function testParse() {
 	checkBigInteger(n, [1], -1);
 
 	n = BigInteger.parse("+42", 10);
-	checkBigInteger(n, [2, 4], 1);
+	checkBigInteger(n, [42], 1);
 
 	n = BigInteger.parse("+42", 5);
-	checkBigInteger(n, [2, 2], 1);
+	checkBigInteger(n, [22], 1);
 
 	n = BigInteger.parse("23x10^5");
-	checkBigInteger(n, [0,0,0,0,0,3,2], 1);
+	checkBigInteger(n, [2300000], 1);
 
 	n = BigInteger.parse("3425 x 10 ^ -2");
-	checkBigInteger(n, [4,3], 1);
+	checkBigInteger(n, [34], 1);
 
 	n = BigInteger.parse("342.5 x 10 ^ -2");
 	checkBigInteger(n, [3], 1);
 
 	n = BigInteger.parse("-23x10^5");
-	checkBigInteger(n, [0,0,0,0,0,3,2], -1);
+	checkBigInteger(n, [2300000], -1);
 
 	n = BigInteger.parse("-3425 x 10 ^ -2");
-	checkBigInteger(n, [4,3], -1);
+	checkBigInteger(n, [34], -1);
 
 	n = BigInteger.parse("23.45x10^5");
-	checkBigInteger(n, [0,0,0,5,4,3,2], 1);
+	checkBigInteger(n, [2345000], 1);
 
 	n = BigInteger.parse("3425e-12");
 	checkBigInteger(n, [], 0);
 
 	n = BigInteger.parse("-3425e8");
-	checkBigInteger(n, [0,0,0,0,0,0,0,0,5,2,4,3], -1);
+	checkBigInteger(n, [0,34250], -1);
 
 	n = BigInteger.parse("-3425e-12");
 	checkBigInteger(n, [], 0);
 
 	n = BigInteger.parse("+3425e0");
-	checkBigInteger(n, [5,2,4,3], 1);
+	checkBigInteger(n, [3425], 1);
 
 	n = BigInteger.parse("0xDeadBeef");
-	checkBigInteger(n, [9,5,5,8,2,9,5,3,7,3], 1);
+	checkBigInteger(n, [5928559, 373], 1);
 
 	n = BigInteger.parse("12abz", 36);
-	checkBigInteger(n, [9,1,3,6,8,7,1], 1);
+	checkBigInteger(n, [1786319], 1);
 
 	n = BigInteger.parse("-0c715");
-	checkBigInteger(n, [1,6,4], -1);
+	checkBigInteger(n, [461], -1);
 
 	n = BigInteger.parse("-0C715", 10);
-	checkBigInteger(n, [5,1,7], -1);
+	checkBigInteger(n, [715], -1);
 
 	n = BigInteger.parse("+0b1101");
-	checkBigInteger(n, [3,1], 1);
+	checkBigInteger(n, [13], 1);
 
 	n = BigInteger.parse("1011", 2);
-	checkBigInteger(n, [1,1], 1);
+	checkBigInteger(n, [11], 1);
 
 	n = BigInteger.parse("1011", 3);
-	checkBigInteger(n, [1,3], 1);
+	checkBigInteger(n, [31], 1);
 
 	n = BigInteger.parse("1011", 4);
-	checkBigInteger(n, [9,6], 1);
+	checkBigInteger(n, [69], 1);
 
 	n = BigInteger.parse("1011", 5);
-	checkBigInteger(n, [1,3,1], 1);
+	checkBigInteger(n, [131], 1);
 
 	n = BigInteger.parse("1011", 6);
-	checkBigInteger(n, [3,2,2], 1);
+	checkBigInteger(n, [223], 1);
 
 	n = BigInteger.parse("1011", 7);
-	checkBigInteger(n, [1,5,3], 1);
+	checkBigInteger(n, [351], 1);
 
 	n = BigInteger.parse("1011", 10);
-	checkBigInteger(n, [1,1,0,1], 1);
+	checkBigInteger(n, [1011], 1);
 
 	n = BigInteger.parse("1011", 11);
-	checkBigInteger(n, [3,4,3,1], 1);
+	checkBigInteger(n, [1343], 1);
 
 	n = BigInteger.parse("1011", 12);
-	checkBigInteger(n, [1,4,7,1], 1);
+	checkBigInteger(n, [1741], 1);
 
 	n = BigInteger.parse("1011", 15);
-	checkBigInteger(n, [1,9,3,3], 1);
+	checkBigInteger(n, [3391], 1);
 
 	n = BigInteger.parse("1011", 16);
-	checkBigInteger(n, [3,1,1,4], 1);
+	checkBigInteger(n, [4113], 1);
 
 	n = BigInteger.parse("1011", 36);
-	checkBigInteger(n, [3,9,6,6,4], 1);
+	checkBigInteger(n, [46693], 1);
 
 	BigInteger.parse("1", 2);
 	BigInteger.parse("2", 3);
@@ -469,11 +469,8 @@ function testConstants() {
 	checkBigInteger(BigInteger.ONE, [1], 1);
 	checkBigInteger(BigInteger.M_ONE, [1], -1);
 
-	for (var i = 1; i <= 9; i++) {
+	for (var i = 1; i <= 36; i++) {
 		checkBigInteger(BigInteger.small[i], [i], 1);
-	}
-	for (var i = 10; i <= 36; i++) {
-		checkBigInteger(BigInteger.small[i], [Math.floor(i % 10), Math.floor(i / 10)], 1);
 	}
 
 	checkBigInteger(BigInteger.MAX_EXP, null, 1);
