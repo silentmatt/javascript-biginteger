@@ -194,6 +194,11 @@ BigInteger.small = [
 // Used for parsing/radix conversion
 BigInteger.digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+// Verify strings for parsing
+BigInteger.radixRegex = function (radix) {
+  return new RegExp('^[' + '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, radix) + ']$', 'i');
+};
+
 /*
 	Method: toString
 	Convert a <BigInteger> to a string.
@@ -248,46 +253,7 @@ BigInteger.prototype.toString = function(base) {
 	}
 };
 
-// Verify strings for parsing
-BigInteger.radixRegex = [
-	/^$/,
-	/^$/,
-	/^[01]*$/,
-	/^[012]*$/,
-	/^[0-3]*$/,
-	/^[0-4]*$/,
-	/^[0-5]*$/,
-	/^[0-6]*$/,
-	/^[0-7]*$/,
-	/^[0-8]*$/,
-	/^[0-9]*$/,
-	/^[0-9aA]*$/,
-	/^[0-9abAB]*$/,
-	/^[0-9abcABC]*$/,
-	/^[0-9a-dA-D]*$/,
-	/^[0-9a-eA-E]*$/,
-	/^[0-9a-fA-F]*$/,
-	/^[0-9a-gA-G]*$/,
-	/^[0-9a-hA-H]*$/,
-	/^[0-9a-iA-I]*$/,
-	/^[0-9a-jA-J]*$/,
-	/^[0-9a-kA-K]*$/,
-	/^[0-9a-lA-L]*$/,
-	/^[0-9a-mA-M]*$/,
-	/^[0-9a-nA-N]*$/,
-	/^[0-9a-oA-O]*$/,
-	/^[0-9a-pA-P]*$/,
-	/^[0-9a-qA-Q]*$/,
-	/^[0-9a-rA-R]*$/,
-	/^[0-9a-sA-S]*$/,
-	/^[0-9a-tA-T]*$/,
-	/^[0-9a-uA-U]*$/,
-	/^[0-9a-vA-V]*$/,
-	/^[0-9a-wA-W]*$/,
-	/^[0-9a-xA-X]*$/,
-	/^[0-9a-yA-Y]*$/,
-	/^[0-9a-zA-Z]*$/
-];
+
 
 /*
 	Function: parse
@@ -374,7 +340,7 @@ BigInteger.parse = function(s, base) {
 		base = +base;
 
 		// Check for digits outside the range
-		if (!(BigInteger.radixRegex[base].test(digits))) {
+		if (!(BigInteger.radixRegex(base).test(digits))) {
 			throw new Error("Bad digit for radix " + base);
 		}
 
