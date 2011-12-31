@@ -391,7 +391,7 @@ BigInteger.parse = function(s, base) {
 		if (base == 10) {
 			var d = [];
 			while (digits.length >= BigInteger.base_log10) {
-				d.push(parseInt(digits.splice(-BigInteger.base_log10).join(''), 10));
+				d.push(parseInt(digits.splice(digits.length-BigInteger.base_log10, BigInteger.base_log10).join(''), 10));
 			}
 			d.push(parseInt(digits.join(''), 10));
 			return new BigInteger(d, sign);
