@@ -17,7 +17,8 @@
 
 		<BigInteger>
 */
-
+(function(exports) {
+"use strict";
 /*
 	Class: BigInteger
 	An arbitrarily-large integer.
@@ -59,6 +60,8 @@ if (!Array.prototype.map) {
 	};
 }
 
+var CONSTRUCT = {}; // Unique token to call "private" version of constructor
+
 /*
 	Constructor: BigInteger()
 	Convert a value to a <BigInteger>.
@@ -94,13 +97,13 @@ if (!Array.prototype.map) {
 
 		<parse>, <BigInteger>
 */
-function BigInteger(n, s) {
-	if (!(this instanceof BigInteger)) {
+function BigInteger(n, s, token) {
+	if (token !== CONSTRUCT) {
 		if (n instanceof BigInteger) {
 			return n;
 		}
 		else if (typeof n === "undefined") {
-			return BigInteger.ZERO;
+			return ZERO;
 		}
 		return BigInteger.parse(n);
 	}
@@ -113,31 +116,41 @@ function BigInteger(n, s) {
 	this._s = n.length ? (s || 1) : 0;
 }
 
+BigInteger._construct = function(n, s) {
+	return new BigInteger(n, s, CONSTRUCT);
+};
+
 // Base-10 speedup hacks in parse, toString, exp10 and log functions
 // require base to be a power of 10. 10^7 is the largest such power
 // that won't cause a precision loss when digits are multiplied.
-BigInteger.base = 10000000;
-BigInteger.base_log10 = 7;
+var BigInteger_base = 10000000;
+var BigInteger_base_log10 = 7;
 
+BigInteger.base = BigInteger_base;
+BigInteger.base_log10 = BigInteger_base_log10;
+
+var ZERO = new BigInteger([], 0, CONSTRUCT);
 // Constant: ZERO
 // <BigInteger> 0.
-BigInteger.ZERO = new BigInteger([], 0);
+BigInteger.ZERO = ZERO;
 
+var ONE = new BigInteger([1], 1, CONSTRUCT);
 // Constant: ONE
 // <BigInteger> 1.
-BigInteger.ONE = new BigInteger([1], 1);
+BigInteger.ONE = ONE;
 
+var M_ONE = new BigInteger(ONE._d, -1, CONSTRUCT);
 // Constant: M_ONE
 // <BigInteger> -1.
-BigInteger.M_ONE = new BigInteger(BigInteger.ONE._d, -1);
+BigInteger.M_ONE = M_ONE;
 
 // Constant: _0
 // Shortcut for <ZERO>.
-BigInteger._0 = BigInteger.ZERO;
+BigInteger._0 = ZERO;
 
 // Constant: _1
 // Shortcut for <ONE>.
-BigInteger._1 = BigInteger.ONE;
+BigInteger._1 = ONE;
 
 /*
 	Constant: small
@@ -151,44 +164,44 @@ BigInteger._1 = BigInteger.ONE;
 		<ZERO>, <ONE>, <_0>, <_1>
 */
 BigInteger.small = [
-	BigInteger.ZERO,
-	BigInteger.ONE,
-	/* Assuming BigInteger.base > 36 */
-	new BigInteger( [2], 1),
-	new BigInteger( [3], 1),
-	new BigInteger( [4], 1),
-	new BigInteger( [5], 1),
-	new BigInteger( [6], 1),
-	new BigInteger( [7], 1),
-	new BigInteger( [8], 1),
-	new BigInteger( [9], 1),
-	new BigInteger([10], 1),
-	new BigInteger([11], 1),
-	new BigInteger([12], 1),
-	new BigInteger([13], 1),
-	new BigInteger([14], 1),
-	new BigInteger([15], 1),
-	new BigInteger([16], 1),
-	new BigInteger([17], 1),
-	new BigInteger([18], 1),
-	new BigInteger([19], 1),
-	new BigInteger([20], 1),
-	new BigInteger([21], 1),
-	new BigInteger([22], 1),
-	new BigInteger([23], 1),
-	new BigInteger([24], 1),
-	new BigInteger([25], 1),
-	new BigInteger([26], 1),
-	new BigInteger([27], 1),
-	new BigInteger([28], 1),
-	new BigInteger([29], 1),
-	new BigInteger([30], 1),
-	new BigInteger([31], 1),
-	new BigInteger([32], 1),
-	new BigInteger([33], 1),
-	new BigInteger([34], 1),
-	new BigInteger([35], 1),
-	new BigInteger([36], 1)
+	ZERO,
+	ONE,
+	/* Assuming BigInteger_base > 36 */
+	new BigInteger( [2], 1, CONSTRUCT),
+	new BigInteger( [3], 1, CONSTRUCT),
+	new BigInteger( [4], 1, CONSTRUCT),
+	new BigInteger( [5], 1, CONSTRUCT),
+	new BigInteger( [6], 1, CONSTRUCT),
+	new BigInteger( [7], 1, CONSTRUCT),
+	new BigInteger( [8], 1, CONSTRUCT),
+	new BigInteger( [9], 1, CONSTRUCT),
+	new BigInteger([10], 1, CONSTRUCT),
+	new BigInteger([11], 1, CONSTRUCT),
+	new BigInteger([12], 1, CONSTRUCT),
+	new BigInteger([13], 1, CONSTRUCT),
+	new BigInteger([14], 1, CONSTRUCT),
+	new BigInteger([15], 1, CONSTRUCT),
+	new BigInteger([16], 1, CONSTRUCT),
+	new BigInteger([17], 1, CONSTRUCT),
+	new BigInteger([18], 1, CONSTRUCT),
+	new BigInteger([19], 1, CONSTRUCT),
+	new BigInteger([20], 1, CONSTRUCT),
+	new BigInteger([21], 1, CONSTRUCT),
+	new BigInteger([22], 1, CONSTRUCT),
+	new BigInteger([23], 1, CONSTRUCT),
+	new BigInteger([24], 1, CONSTRUCT),
+	new BigInteger([25], 1, CONSTRUCT),
+	new BigInteger([26], 1, CONSTRUCT),
+	new BigInteger([27], 1, CONSTRUCT),
+	new BigInteger([28], 1, CONSTRUCT),
+	new BigInteger([29], 1, CONSTRUCT),
+	new BigInteger([30], 1, CONSTRUCT),
+	new BigInteger([31], 1, CONSTRUCT),
+	new BigInteger([32], 1, CONSTRUCT),
+	new BigInteger([33], 1, CONSTRUCT),
+	new BigInteger([34], 1, CONSTRUCT),
+	new BigInteger([35], 1, CONSTRUCT),
+	new BigInteger([36], 1, CONSTRUCT)
 ];
 
 // Used for parsing/radix conversion
@@ -222,7 +235,7 @@ BigInteger.prototype.toString = function(base) {
 		str += this._d[this._d.length - 1].toString();
 		for (var i = this._d.length - 2; i >= 0; i--) {
 			var group = this._d[i].toString();
-			while (group.length < BigInteger.base_log10) group = '0' + group;
+			while (group.length < BigInteger_base_log10) group = '0' + group;
 			str += group;
 		}
 		return str;
@@ -381,7 +394,7 @@ BigInteger.parse = function(s, base) {
 		// Strip leading zeros, and convert to array
 		digits = digits.replace(/^0+/, "").split("");
 		if (digits.length === 0) {
-			return BigInteger.ZERO;
+			return ZERO;
 		}
 
 		// Get the sign (we know it's not zero)
@@ -390,26 +403,26 @@ BigInteger.parse = function(s, base) {
 		// Optimize 10
 		if (base == 10) {
 			var d = [];
-			while (digits.length >= BigInteger.base_log10) {
+			while (digits.length >= BigInteger_base_log10) {
 				d.push(parseInt(digits.splice(digits.length-BigInteger.base_log10, BigInteger.base_log10).join(''), 10));
 			}
 			d.push(parseInt(digits.join(''), 10));
-			return new BigInteger(d, sign);
+			return new BigInteger(d, sign, CONSTRUCT);
 		}
 
 		// Optimize base
-		if (base === BigInteger.base) {
-			return new BigInteger(digits.map(Number).reverse(), sign);
+		if (base === BigInteger_base) {
+			return new BigInteger(digits.map(Number).reverse(), sign, CONSTRUCT);
 		}
 
 		// Do the conversion
-		var d = BigInteger.ZERO;
+		var d = ZERO;
 		base = BigInteger.small[base];
 		var small = BigInteger.small;
 		for (var i = 0; i < digits.length; i++) {
 			d = d.multiply(base).add(small[parseInt(digits[i], 36)]);
 		}
-		return new BigInteger(d._d, sign);
+		return new BigInteger(d._d, sign, CONSTRUCT);
 	}
 	else {
 		throw new Error("Invalid BigInteger format: " + s);
@@ -457,8 +470,8 @@ BigInteger.prototype.add = function(n) {
 
 	for (var i = 0; i < size; i++) {
 		digit = a[i] + b[i] + carry;
-		sum[i] = digit % BigInteger.base;
-		carry = (digit / BigInteger.base) | 0;
+		sum[i] = digit % BigInteger_base;
+		carry = (digit / BigInteger_base) | 0;
 	}
 	if (bl > al) {
 		a = b;
@@ -466,8 +479,8 @@ BigInteger.prototype.add = function(n) {
 	}
 	for (i = size; carry && i < al; i++) {
 		digit = a[i] + carry;
-		sum[i] = digit % BigInteger.base;
-		carry = (digit / BigInteger.base) | 0;
+		sum[i] = digit % BigInteger_base;
+		carry = (digit / BigInteger_base) | 0;
 	}
 	if (carry) {
 		sum[i] = carry;
@@ -477,7 +490,7 @@ BigInteger.prototype.add = function(n) {
 		sum[i] = a[i];
 	}
 
-	return new BigInteger(sum, this._s);
+	return new BigInteger(sum, this._s, CONSTRUCT);
 };
 
 /*
@@ -493,7 +506,7 @@ BigInteger.prototype.add = function(n) {
 		<abs>
 */
 BigInteger.prototype.negate = function() {
-	return new BigInteger(this._d, -this._s);
+	return new BigInteger(this._d, (-this._s) | 0, CONSTRUCT);
 };
 
 /*
@@ -543,22 +556,20 @@ BigInteger.prototype.subtract = function(n) {
 	}
 
 	var m = this;
-	var t;
 	// negative - negative => -|a| - -|b| => -|a| + |b| => |b| - |a|
 	if (this._s < 0) {
-		t = m;
-		m = new BigInteger(n._d, 1);
-		n = new BigInteger(t._d, 1);
+		m = new BigInteger(n._d, 1, CONSTRUCT);
+		n = new BigInteger(this._d, 1, CONSTRUCT);
 	}
 
 	// Both are positive => a - b
 	var sign = m.compareAbs(n);
 	if (sign === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 	else if (sign < 0) {
 		// swap m and n
-		t = n;
+		var t = n;
 		n = m;
 		m = t;
 	}
@@ -576,7 +587,7 @@ BigInteger.prototype.subtract = function(n) {
 	for (i = 0; i < bl; i++) {
 		digit = a[i] - borrow - b[i];
 		if (digit < 0) {
-			digit += BigInteger.base;
+			digit += BigInteger_base;
 			borrow = 1;
 		}
 		else {
@@ -587,7 +598,7 @@ BigInteger.prototype.subtract = function(n) {
 	for (i = bl; i < al; i++) {
 		digit = a[i] - borrow;
 		if (digit < 0) {
-			digit += BigInteger.base;
+			digit += BigInteger_base;
 		}
 		else {
 			diff[i++] = digit;
@@ -599,7 +610,7 @@ BigInteger.prototype.subtract = function(n) {
 		diff[i] = a[i];
 	}
 
-	return new BigInteger(diff, sign);
+	return new BigInteger(diff, sign, CONSTRUCT);
 };
 
 (function() {
@@ -611,14 +622,14 @@ BigInteger.prototype.subtract = function(n) {
 
 		while (true) {
 			var digit = (a[i] || 0) + 1;
-			sum[i] = digit % BigInteger.base;
-			if (digit <= BigInteger.base - 1) {
+			sum[i] = digit % BigInteger_base;
+			if (digit <= BigInteger_base - 1) {
 				break;
 			}
 			++i;
 		}
 
-		return new BigInteger(sum, sign);
+		return new BigInteger(sum, sign, CONSTRUCT);
 	}
 
 	function subtractOne(n, sign) {
@@ -630,7 +641,7 @@ BigInteger.prototype.subtract = function(n) {
 		while (true) {
 			var digit = (a[i] || 0) - 1;
 			if (digit < 0) {
-				sum[i] = digit + BigInteger.base;
+				sum[i] = digit + BigInteger_base;
 			}
 			else {
 				sum[i] = digit;
@@ -639,7 +650,7 @@ BigInteger.prototype.subtract = function(n) {
 			++i;
 		}
 
-		return new BigInteger(sum, sign);
+		return new BigInteger(sum, sign, CONSTRUCT);
 	}
 
 	/*
@@ -657,7 +668,7 @@ BigInteger.prototype.subtract = function(n) {
 	BigInteger.prototype.next = function() {
 		switch (this._s) {
 		case 0:
-			return BigInteger.ONE;
+			return ONE;
 		case -1:
 			return subtractOne(this, -1);
 		// case 1:
@@ -681,7 +692,7 @@ BigInteger.prototype.subtract = function(n) {
 	BigInteger.prototype.prev = function() {
 		switch (this._s) {
 		case 0:
-			return BigInteger.M_ONE;
+			return M_ONE;
 		case -1:
 			return addOne(this, -1);
 		// case 1:
@@ -798,8 +809,8 @@ BigInteger.prototype.compare = function(n) {
 		<BigInteger.ONE>, <BigInteger.M_ONE>
 */
 BigInteger.prototype.isUnit = function() {
-	return this === BigInteger.ONE ||
-		this === BigInteger.M_ONE ||
+	return this === ONE ||
+		this === M_ONE ||
 		(this._d.length === 1 && this._d[0] === 1);
 };
 
@@ -823,12 +834,12 @@ BigInteger.prototype.isUnit = function() {
 BigInteger.prototype.multiply = function(n) {
 	// TODO: Consider adding Karatsuba multiplication for large numbers
 	if (this._s === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 
 	n = BigInteger(n);
 	if (n._s === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 	if (this.isUnit()) {
 		if (this._s < 0) {
@@ -866,16 +877,16 @@ BigInteger.prototype.multiply = function(n) {
 		var digit;
 		for (var j = i; j < jlimit; j++) {
 			digit = partial[j] + bi * a[j - i] + carry;
-			carry = (digit / BigInteger.base) | 0;
-			partial[j] = (digit % BigInteger.base) | 0;
+			carry = (digit / BigInteger_base) | 0;
+			partial[j] = (digit % BigInteger_base) | 0;
 		}
 		if (carry) {
 			digit = partial[j] + carry;
-			carry = (digit / BigInteger.base) | 0;
-			partial[j] = digit % BigInteger.base;
+			carry = (digit / BigInteger_base) | 0;
+			partial[j] = digit % BigInteger_base;
 		}
 	}
-	return new BigInteger(partial, this._s * n._s);
+	return new BigInteger(partial, this._s * n._s, CONSTRUCT);
 };
 
 // Multiply a BigInteger by a single-digit native number
@@ -883,7 +894,7 @@ BigInteger.prototype.multiply = function(n) {
 // This is not really intended to be used outside the library itself
 BigInteger.prototype.multiplySingleDigit = function(n) {
 	if (n === 0 || this._s === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 	if (n === 1) {
 		return this;
@@ -892,18 +903,18 @@ BigInteger.prototype.multiplySingleDigit = function(n) {
 	var digit;
 	if (this._d.length === 1) {
 		digit = this._d[0] * n;
-		if (digit >= BigInteger.base) {
-			return new BigInteger([(digit % BigInteger.base)|0,
-					(digit / BigInteger.base)|0], 1);
+		if (digit >= BigInteger_base) {
+			return new BigInteger([(digit % BigInteger_base)|0,
+					(digit / BigInteger_base)|0], 1, CONSTRUCT);
 		}
-		return new BigInteger([digit], 1);
+		return new BigInteger([digit], 1, CONSTRUCT);
 	}
 
 	if (n === 2) {
 		return this.add(this);
 	}
 	if (this.isUnit()) {
-		return new BigInteger([n], 1);
+		return new BigInteger([n], 1, CONSTRUCT);
 	}
 
 	var a = this._d;
@@ -918,16 +929,14 @@ BigInteger.prototype.multiplySingleDigit = function(n) {
 	var carry = 0;
 	for (var j = 0; j < al; j++) {
 		digit = n * a[j] + carry;
-		carry = (digit / BigInteger.base) | 0;
-		partial[j] = (digit % BigInteger.base) | 0;
+		carry = (digit / BigInteger_base) | 0;
+		partial[j] = (digit % BigInteger_base) | 0;
 	}
 	if (carry) {
-		digit = carry;
-		carry = (digit / BigInteger.base) | 0;
-		partial[j] = digit % BigInteger.base;
+		partial[j] = carry;
 	}
 
-	return new BigInteger(partial, 1);
+	return new BigInteger(partial, 1, CONSTRUCT);
 };
 
 /*
@@ -951,10 +960,10 @@ BigInteger.prototype.square = function() {
 	// Based on code by Gary Darby, Intellitech Systems Inc., www.DelphiForFun.org
 
 	if (this._s === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 	if (this.isUnit()) {
-		return BigInteger.ONE;
+		return ONE;
 	}
 
 	var digits = this._d;
@@ -967,8 +976,8 @@ BigInteger.prototype.square = function() {
 	for (i = 0; i < length; i++) {
 		k = i * 2;
 		product = digits[i] * digits[i];
-		carry = (product / BigInteger.base) | 0;
-		imult1[k] = product % BigInteger.base;
+		carry = (product / BigInteger_base) | 0;
+		imult1[k] = product % BigInteger_base;
 		imult1[k + 1] = carry;
 	}
 
@@ -978,17 +987,17 @@ BigInteger.prototype.square = function() {
 		k = i * 2 + 1;
 		for (var j = i + 1; j < length; j++, k++) {
 			product = digits[j] * digits[i] * 2 + imult1[k] + carry;
-			carry = (product / BigInteger.base) | 0;
-			imult1[k] = product % BigInteger.base;
+			carry = (product / BigInteger_base) | 0;
+			imult1[k] = product % BigInteger_base;
 		}
 		k = length + i;
 		var digit = carry + imult1[k];
-		carry = (digit / BigInteger.base) | 0;
-		imult1[k] = digit % BigInteger.base;
+		carry = (digit / BigInteger_base) | 0;
+		imult1[k] = digit % BigInteger_base;
 		imult1[k + 1] += carry;
 	}
 
-	return new BigInteger(imult1, 1);
+	return new BigInteger(imult1, 1, CONSTRUCT);
 };
 
 /*
@@ -1074,7 +1083,7 @@ BigInteger.prototype.divRem = function(n) {
 		throw new Error("Divide by zero");
 	}
 	if (this._s === 0) {
-		return [BigInteger.ZERO, BigInteger.ZERO];
+		return [ZERO, ZERO];
 	}
 	if (n._d.length === 1) {
 		return this.divRemSmall(n._s * n._d[0]);
@@ -1083,25 +1092,24 @@ BigInteger.prototype.divRem = function(n) {
 	// Test for easy cases -- |n1| <= |n2|
 	switch (this.compareAbs(n)) {
 	case 0: // n1 == n2
-		return [this._s === n._s ? BigInteger.ONE : BigInteger.M_ONE, BigInteger.ZERO];
+		return [this._s === n._s ? ONE : M_ONE, ZERO];
 	case -1: // |n1| < |n2|
-		return [BigInteger.ZERO, this];
+		return [ZERO, this];
 	}
 
 	var sign = this._s * n._s;
 	var a = n.abs();
-	var b_digits = this._d.slice();
+	var b_digits = this._d;
+	var b_index = b_digits.length;
 	var digits = n._d.length;
-	var max = b_digits.length;
 	var quot = [];
 	var guess;
 
-	var part = new BigInteger([], 1);
+	var part = new BigInteger([], 0, CONSTRUCT);
 	part._s = 1;
 
-	while (b_digits.length) {
-		part._d.unshift(b_digits.pop());
-		part = new BigInteger(part._d, 1);
+	while (b_index) {
+		part._d.unshift(b_digits[--b_index]);
 
 		if (part.compareAbs(n) < 0) {
 			quot.push(0);
@@ -1112,12 +1120,12 @@ BigInteger.prototype.divRem = function(n) {
 		}
 		else {
 			var xlen = part._d.length, ylen = a._d.length;
-			var highx = part._d[xlen-1]*BigInteger.base + part._d[xlen-2];
-			var highy = a._d[ylen-1]*BigInteger.base + a._d[ylen-2];
+			var highx = part._d[xlen-1]*BigInteger_base + part._d[xlen-2];
+			var highy = a._d[ylen-1]*BigInteger_base + a._d[ylen-2];
 			if (part._d.length > a._d.length) {
 				// The length of part._d can either match a._d length,
 				// or exceed it by one.
-				highx = (highx+1)*BigInteger.base;
+				highx = (highx+1)*BigInteger_base;
 			}
 			guess = Math.ceil(highx/highy);
 		}
@@ -1135,10 +1143,13 @@ BigInteger.prototype.divRem = function(n) {
 		}
 		var diff = part.subtract(check);
 		part._d = diff._d.slice();
+		if (part._d.length === 0) {
+			part._s = 0;
+		}
 	}
 
-	return [new BigInteger(quot.reverse(), sign),
-		   new BigInteger(part._d, this._s)];
+	return [new BigInteger(quot.reverse(), sign, CONSTRUCT),
+		   new BigInteger(part._d, this._s, CONSTRUCT)];
 };
 
 // Throws an exception if n is outside of (-BigInteger.base, -1] or
@@ -1155,24 +1166,24 @@ BigInteger.prototype.divRemSmall = function(n) {
 	var sign = this._s * n_s;
 	n = Math.abs(n);
 
-	if (n < 1 || n >= BigInteger.base) {
+	if (n < 1 || n >= BigInteger_base) {
 		throw new Error("Argument out of range");
 	}
 
 	if (this._s === 0) {
-		return [BigInteger.ZERO, BigInteger.ZERO];
+		return [ZERO, ZERO];
 	}
 
 	if (n === 1 || n === -1) {
-		return [(sign === 1) ? this.abs() : new BigInteger(this._d, sign), BigInteger.ZERO];
+		return [(sign === 1) ? this.abs() : new BigInteger(this._d, sign, CONSTRUCT), ZERO];
 	}
 
-	// 2 <= n < BigInteger.base
+	// 2 <= n < BigInteger_base
 
 	// divide a single digit by a single digit
 	if (this._d.length === 1) {
-		var q = new BigInteger([(this._d[0] / n) | 0], 1);
-		r = new BigInteger([(this._d[0] % n) | 0], 1);
+		var q = new BigInteger([(this._d[0] / n) | 0], 1, CONSTRUCT);
+		r = new BigInteger([(this._d[0] % n) | 0], 1, CONSTRUCT);
 		if (sign < 0) {
 			q = q.negate();
 		}
@@ -1190,11 +1201,11 @@ BigInteger.prototype.divRemSmall = function(n) {
 	var guess;
 
 	while (digits.length) {
-		part = part * BigInteger.base + digits[digits.length - 1];
+		part = part * BigInteger_base + digits[digits.length - 1];
 		if (part < n) {
 			quot[i++] = 0;
 			digits.pop();
-			diff = BigInteger.base * diff + part;
+			diff = BigInteger_base * diff + part;
 			continue;
 		}
 		if (part === 0) {
@@ -1216,11 +1227,11 @@ BigInteger.prototype.divRemSmall = function(n) {
 		part = diff;
 	}
 
-	r = new BigInteger([diff], 1);
+	r = new BigInteger([diff], 1, CONSTRUCT);
 	if (this._s < 0) {
 		r = r.negate();
 	}
-	return [new BigInteger(quot.reverse(), sign), r];
+	return [new BigInteger(quot.reverse(), sign, CONSTRUCT), r];
 };
 
 /*
@@ -1356,13 +1367,13 @@ BigInteger.prototype.exp10 = function(n) {
 	if (n === 0) {
 		return this;
 	}
-	if (Math.abs(n) > Number(BigInteger.MAX_EXP)) {
+	if (Math.abs(n) > Number(MAX_EXP)) {
 		throw new Error("exponent too large in BigInteger.exp10");
 	}
 	if (n > 0) {
-		var k = new BigInteger(this._d.slice(), this._s);
+		var k = new BigInteger(this._d.slice(), this._s, CONSTRUCT);
 
-		for (; n >= BigInteger.base_log10; n -= BigInteger.base_log10) {
+		for (; n >= BigInteger_base_log10; n -= BigInteger_base_log10) {
 			k._d.unshift(0);
 		}
 		if (n == 0)
@@ -1370,12 +1381,12 @@ BigInteger.prototype.exp10 = function(n) {
 		k._s = 1;
 		k = k.multiplySingleDigit(Math.pow(10, n));
 		return (this._s < 0 ? k.negate() : k);
-	} else if (-n >= this._d.length*BigInteger.base_log10) {
-		return BigInteger.ZERO;
+	} else if (-n >= this._d.length*BigInteger_base_log10) {
+		return ZERO;
 	} else {
-		var k = new BigInteger(this._d.slice(), this._s);
+		var k = new BigInteger(this._d.slice(), this._s, CONSTRUCT);
 
-		for (n = -n; n >= BigInteger.base_log10; n -= BigInteger.base_log10) {
+		for (n = -n; n >= BigInteger_base_log10; n -= BigInteger_base_log10) {
 			k._d.shift();
 		}
 		return (n == 0) ? k : k.divRemSmall(Math.pow(10, n))[0];
@@ -1413,28 +1424,28 @@ BigInteger.prototype.pow = function(n) {
 
 	n = BigInteger(n);
 	if (n._s === 0) {
-		return BigInteger.ONE;
+		return ONE;
 	}
 	else if (n._s < 0) {
 		if (this._s === 0) {
 			throw new Error("Divide by zero");
 		}
 		else {
-			return BigInteger.ZERO;
+			return ZERO;
 		}
 	}
 	if (this._s === 0) {
-		return BigInteger.ZERO;
+		return ZERO;
 	}
 	if (n.isUnit()) {
 		return this;
 	}
 
-	if (n.compareAbs(BigInteger.MAX_EXP) > 0) {
+	if (n.compareAbs(MAX_EXP) > 0) {
 		throw new Error("exponent too large in BigInteger.pow");
 	}
 	var x = this;
-	var aux = BigInteger.ONE;
+	var aux = ONE;
 	var two = BigInteger.small[2];
 
 	while (n.isPositive()) {
@@ -1472,7 +1483,7 @@ BigInteger.prototype.pow = function(n) {
 		<pow>, <mod>
 */
 BigInteger.prototype.modPow = function(exponent, modulus) {
-	var result = BigInteger.ONE;
+	var result = ONE;
 	var base = this;
 
 	while (exponent.isPositive()) {
@@ -1516,13 +1527,13 @@ BigInteger.prototype.log = function() {
 
 	var l = this._d.length;
 
-	if (l*BigInteger.base_log10 < 30) {
+	if (l*BigInteger_base_log10 < 30) {
 		return Math.log(this.valueOf());
 	}
 
-	var N = Math.ceil(30/BigInteger.base_log10);
+	var N = Math.ceil(30/BigInteger_base_log10);
 	var firstNdigits = this._d.slice(l - N);
-	return Math.log((new BigInteger(firstNdigits, 1)).valueOf()) + (l - N) * Math.log(BigInteger.base);
+	return Math.log((new BigInteger(firstNdigits, 1, CONSTRUCT)).valueOf()) + (l - N) * Math.log(BigInteger_base);
 };
 
 /*
@@ -1562,9 +1573,10 @@ BigInteger.prototype.toJSValue = function() {
 	return parseInt(this.toString(), 10);
 };
 
+var MAX_EXP = BigInteger(0x7FFFFFFF);
 // Constant: MAX_EXP
 // The largest exponent allowed in <pow> and <exp10> (0x7FFFFFFF or 2147483647).
-BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
+BigInteger.MAX_EXP = MAX_EXP;
 
 (function() {
 	function makeUnary(fn) {
@@ -1612,6 +1624,5 @@ BigInteger.MAX_EXP = BigInteger(0x7FFFFFFF);
 	})();
 })();
 
-if (typeof exports !== 'undefined') {
-	exports.BigInteger = BigInteger;
-}
+exports.BigInteger = BigInteger;
+})(typeof exports !== 'undefined' ? exports : this);

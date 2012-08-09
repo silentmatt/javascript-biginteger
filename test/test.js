@@ -1,5 +1,5 @@
 function AssertionFailed(message) {
-	this.message = Array.join(message, " ");
+	this.message = [].join.call(message, " ");
 }
 
 AssertionFailed.prototype = new Error();

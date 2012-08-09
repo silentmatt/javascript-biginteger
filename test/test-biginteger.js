@@ -127,29 +127,29 @@ function checkBigInteger(n, d, s) {
 }
 
 function testConstructor() {
-	var n = new BigInteger([], 1);
+	var n = BigInteger._construct([], 1);
 	checkBigInteger(n, [], 0);
 
-	n = new BigInteger([0,0,0], 1);
+	n = BigInteger._construct([0,0,0], 1);
 	checkBigInteger(n, [], 0);
 
-	n = new BigInteger([1], 1);
+	n = BigInteger._construct([1], 1);
 	checkBigInteger(n, [1], 1);
 
-	n = new BigInteger([2,0], 1);
+	n = BigInteger._construct([2,0], 1);
 	checkBigInteger(n, [2], 1);
 
-	n = new BigInteger([3], 0);
+	n = BigInteger._construct([3], 0);
 	checkBigInteger(n, [3], 1);
 
-	n = new BigInteger([4], -1);
+	n = BigInteger._construct([4], -1);
 	checkBigInteger(n, [4], -1);
 
-	n = new BigInteger([1,2,3], -1);
+	n = BigInteger._construct([1,2,3], -1);
 	checkBigInteger(n, [1,2,3], -1);
 
 	var a = [3,2,1];
-	n = new BigInteger(a, 1);
+	n = BigInteger._construct(a, 1);
 	a.unshift(4);
 	checkBigInteger(n, [4,3,2,1], 1);
 };
@@ -161,14 +161,14 @@ function testConversion() {
 	var n = BigInteger(-123);
 	checkBigInteger(n, [123], -1);
 
-	var n = BigInteger(456);
-	checkBigInteger(n, [456], 1);
+	var n = BigInteger(4567);
+	checkBigInteger(n, [4567], 1);
 
 	var n = BigInteger("+42");
 	checkBigInteger(n, [42], 1);
 
 	var n = BigInteger("23x10^5");
-	checkBigInteger(n, [2300000], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
 
 	var n = BigInteger("3425 x 10 ^ -2");
 	checkBigInteger(n, [34], 1);
@@ -177,19 +177,19 @@ function testConversion() {
 	checkBigInteger(n, [3], 1);
 
 	var n = BigInteger("-23x10^5");
-	checkBigInteger(n, [2300000], -1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
 
 	var n = BigInteger("-3425 x 10 ^ -2");
 	checkBigInteger(n, [34], -1);
 
 	var n = BigInteger("23.45x10^5");
-	checkBigInteger(n, [2345000], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
 
 	var n = BigInteger("3425e-12");
 	checkBigInteger(n, [], 0);
 
 	var n = BigInteger("-3425e8");
-	checkBigInteger(n, [0, 34250], -1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [0, 34250] : [0, 0, 3425], -1);
 
 	var n = BigInteger("3425e-12");
 	checkBigInteger(n, [], 0);
@@ -198,7 +198,7 @@ function testConversion() {
 	checkBigInteger(n, [3425], 1);
 
 	var n = BigInteger("0xDeadBeef");
-	checkBigInteger(n, [5928559, 373], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
 
 	var n = BigInteger("-0c715");
 	checkBigInteger(n, [461], -1);
@@ -228,7 +228,7 @@ function testParse() {
 	checkBigInteger(n, [22], 1);
 
 	n = BigInteger.parse("23x10^5");
-	checkBigInteger(n, [2300000], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
 
 	n = BigInteger.parse("3425 x 10 ^ -2");
 	checkBigInteger(n, [34], 1);
@@ -237,19 +237,19 @@ function testParse() {
 	checkBigInteger(n, [3], 1);
 
 	n = BigInteger.parse("-23x10^5");
-	checkBigInteger(n, [2300000], -1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
 
 	n = BigInteger.parse("-3425 x 10 ^ -2");
 	checkBigInteger(n, [34], -1);
 
 	n = BigInteger.parse("23.45x10^5");
-	checkBigInteger(n, [2345000], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
 
 	n = BigInteger.parse("3425e-12");
 	checkBigInteger(n, [], 0);
 
 	n = BigInteger.parse("-3425e8");
-	checkBigInteger(n, [0,34250], -1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [0, 34250] : [0,0,3425], -1);
 
 	n = BigInteger.parse("-3425e-12");
 	checkBigInteger(n, [], 0);
@@ -258,10 +258,10 @@ function testParse() {
 	checkBigInteger(n, [3425], 1);
 
 	n = BigInteger.parse("0xDeadBeef");
-	checkBigInteger(n, [5928559, 373], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
 
 	n = BigInteger.parse("12abz", 36);
-	checkBigInteger(n, [1786319], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [1786319] : [6319, 178], 1);
 
 	n = BigInteger.parse("-0c715");
 	checkBigInteger(n, [461], -1);
@@ -306,7 +306,7 @@ function testParse() {
 	checkBigInteger(n, [4113], 1);
 
 	n = BigInteger.parse("1011", 36);
-	checkBigInteger(n, [46693], 1);
+	checkBigInteger(n, BigInteger.base_log10 === 7 ? [46693] : [6693, 4], 1);
 
 	BigInteger.parse("1", 2);
 	BigInteger.parse("2", 3);
@@ -411,7 +411,7 @@ function testParseFail() {
 
 function testToString() {
 	var narray = [
-		new BigInteger([], 1),
+		BigInteger._construct([], 1),
 		BigInteger(-1),
 		BigInteger(-123),
 		BigInteger(456),
@@ -478,7 +478,7 @@ function testConstants() {
 
 function testToJSValue() {
 	var narray = [
-		new BigInteger([], 1).toJSValue(),
+		BigInteger._construct([], 1).toJSValue(),
 		BigInteger(-1).toJSValue(),
 		BigInteger(-123).toJSValue(),
 		BigInteger(456).toJSValue(),
@@ -528,7 +528,7 @@ function testToJSValue() {
 
 function testValueOf() {
 	var narray = [
-		+new BigInteger([], 1),
+		+BigInteger._construct([], 1),
 		+BigInteger(-1),
 		+BigInteger(-123),
 		+BigInteger(456),
