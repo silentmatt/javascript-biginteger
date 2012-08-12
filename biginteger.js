@@ -359,7 +359,23 @@ BigInteger.parse = function(s, base) {
 		s = expandExponential(s);
 	}
 
-	var parts = /^([+\-]?)(0[xXcCbB])?([0-9A-Za-z]*)(?:\.\d*)?$/.exec(s);
+	var prefixRE;
+	if (typeof base === "undefined") {
+		prefixRE = '0[xcb]';
+	}
+	else if (base == 16) {
+		prefixRE = '0x';
+	}
+	else if (base == 8) {
+		prefixRE = '0c';
+	}
+	else if (base == 2) {
+		prefixRE = '0b';
+	}
+	else {
+		prefixRE = '';
+	}
+	var parts = new RegExp('^([+\\-]?)(' + prefixRE + ')?([0-9a-z]*)(?:\\.\\d*)?$', 'i').exec(s);
 	if (parts) {
 		var sign = parts[1] || "+";
 		var baseSection = parts[2] || "";

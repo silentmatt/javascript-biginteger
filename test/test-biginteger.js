@@ -266,9 +266,6 @@ function testParse() {
 	n = BigInteger.parse("-0c715");
 	checkBigInteger(n, [461], -1);
 
-	n = BigInteger.parse("-0C715", 10);
-	checkBigInteger(n, [715], -1);
-
 	n = BigInteger.parse("+0b1101");
 	checkBigInteger(n, [13], 1);
 
@@ -307,6 +304,27 @@ function testParse() {
 
 	n = BigInteger.parse("1011", 36);
 	checkBigInteger(n, BigInteger.base_log10 === 7 ? [46693] : [6693, 4], 1);
+
+	n = BigInteger.parse("0b", 16);
+	checkBigInteger(n, [11], 1);
+
+	n = BigInteger.parse("0c", 16);
+	checkBigInteger(n, [12], 1);
+
+	n = BigInteger.parse("0b12", 16);
+	checkBigInteger(n, [2834], 1);
+
+	n = BigInteger.parse("0c12", 16);
+	checkBigInteger(n, [3090], 1);
+
+	n = BigInteger.parse("0b101", 2);
+	checkBigInteger(n, [5], 1);
+
+	n = BigInteger.parse("0c101", 8);
+	checkBigInteger(n, [65], 1);
+
+	n = BigInteger.parse("0x101", 16);
+	checkBigInteger(n, [257], 1);
 
 	BigInteger.parse("1", 2);
 	BigInteger.parse("2", 3);
@@ -372,6 +390,13 @@ function testParseFail() {
 	assertThrows(createTest("52", 5), digitError);
 	assertThrows(createTest("23a105"), digitError);
 	assertThrows(createTest("DeadBeef", 15), digitError);
+	assertThrows(createTest("-0C715", 10), digitError);
+	assertThrows(createTest("-0x715", 10), digitError);
+	assertThrows(createTest("-0b715", 10), digitError);
+	assertThrows(createTest("-0x715", 8), digitError);
+	assertThrows(createTest("-0b715", 8), digitError);
+	assertThrows(createTest("-0C715", 2), digitError);
+	assertThrows(createTest("-0x715", 2), digitError);
 
 	assertThrows(createTest("2", 2), digitError);
 	assertThrows(createTest("3", 3), digitError);
