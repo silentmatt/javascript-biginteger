@@ -40,26 +40,6 @@
 	> var a = BigInteger.toJSValue("0b101010"); // Not completely useless...
 */
 
-// IE doesn't support Array.prototype.map
-if (!Array.prototype.map) {
-	Array.prototype.map = function(fun /*, thisp*/) {
-		var len = this.length >>> 0;
-		if (typeof fun !== "function") {
-			throw new TypeError();
-		}
-
-		var res = new Array(len);
-		var thisp = arguments[1];
-		for (var i = 0; i < len; i++) {
-			if (i in this) {
-				res[i] = fun.call(thisp, this[i], i, this);
-			}
-		}
-
-		return res;
-	};
-}
-
 var CONSTRUCT = {}; // Unique token to call "private" version of constructor
 
 /*
@@ -424,11 +404,6 @@ BigInteger.parse = function(s, base) {
 			}
 			d.push(parseInt(digits.join(''), 10));
 			return new BigInteger(d, sign, CONSTRUCT);
-		}
-
-		// Optimize base
-		if (base === BigInteger_base) {
-			return new BigInteger(digits.map(Number).reverse(), sign, CONSTRUCT);
 		}
 
 		// Do the conversion
