@@ -37,7 +37,7 @@
 	> BigInteger.multiply(4, 5); // returns BigInteger(20);
 
 	> var a = 42;
-	> var a = BigInteger.toJSValue("0b101010"); // Not completely useless...
+	> var a = BigInteger.doubleValue("0b101010"); // Not completely useless...
 */
 
 var CONSTRUCT = {}; // Unique token to call "private" version of constructor
@@ -85,7 +85,7 @@ function BigInteger(n, s, token) {
 		else if (typeof n === "undefined") {
 			return ZERO;
 		}
-		return BigInteger.parse(n);
+		return BigInteger.parse(n, s);
 	}
 
 	n = n || [];  // Provide the nullary constructor for subclasses.
@@ -420,6 +420,14 @@ BigInteger.parse = function(s, base) {
 	}
 };
 
+BigInteger.valueOf = function (n) {
+  n = Math.floor(+n);
+  if (n === 0) {
+    return ZERO;
+  }
+  return BigInteger.parse(String(n), 10);
+};
+
 /*
 	Function: add
 	Add two <BigIntegers>.
@@ -751,7 +759,7 @@ BigInteger.prototype.compareAbs = function(n) {
 };
 
 /*
-	Function: compare
+	Function: compareTo
 	Compare two <BigIntegers>.
 
 	Parameters:
@@ -766,7 +774,7 @@ BigInteger.prototype.compareAbs = function(n) {
 
 		<compareAbs>, <isPositive>, <isNegative>, <isUnit>
 */
-BigInteger.prototype.compare = function(n) {
+BigInteger.prototype.compareTo = function(n) {
 	if (this === n) {
 		return 0;
 	}
@@ -1261,7 +1269,7 @@ BigInteger.prototype.isOdd = function() {
 };
 
 /*
-	Function: sign
+	Function: signum
 	Get the sign of a <BigInteger>.
 
 	Returns:
@@ -1274,7 +1282,7 @@ BigInteger.prototype.isOdd = function() {
 
 		<isZero>, <isPositive>, <isNegative>, <compare>, <BigInteger.ZERO>
 */
-BigInteger.prototype.sign = function() {
+BigInteger.prototype.signum = function() {
 	return this._s;
 };
 
@@ -1284,11 +1292,11 @@ BigInteger.prototype.sign = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == 1.
+		true if *this*.compareTo(<BigInteger.ZERO>) == 1.
 
 	See Also:
 
-		<sign>, <isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
+		<signum>, <isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isPositive = function() {
 	return this._s > 0;
@@ -1300,7 +1308,7 @@ BigInteger.prototype.isPositive = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == -1.
+		true if *this*.compareTo(<BigInteger.ZERO>) == -1.
 
 	See Also:
 
@@ -1316,11 +1324,11 @@ BigInteger.prototype.isNegative = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == 0.
+		true if *this*.compareTo(<BigInteger.ZERO>) == 0.
 
 	See Also:
 
-		<sign>, <isPositive>, <isNegative>, <isUnit>, <BigInteger.ZERO>
+		<signum>, <isPositive>, <isNegative>, <isUnit>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isZero = function() {
 	return this._s === 0;
@@ -1497,7 +1505,7 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	This is equivalent to
 
-	> Math.log(this.toJSValue())
+	> Math.log(this.doubleValue())
 
 	but handles values outside of the native number range.
 
@@ -1507,7 +1515,7 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	See Also:
 
-		<toJSValue>
+		<doubleValue>
 */
 BigInteger.prototype.log = function() {
 	switch (this._s) {
@@ -1528,6 +1536,26 @@ BigInteger.prototype.log = function() {
 };
 
 /*
+	Function: gcd
+	Get a <BigInteger> whose value is the greatest common divisor of abs(this) and abs(n).
+
+	Returns:
+
+		gcd( *this* , value)
+
+*/
+BigInteger.prototype.gcd = function (n) {
+  var a = this.abs();
+  var t = null;
+  while (n.compareTo(ZERO) > 0) {
+    t = a.remainder(n);
+    a = n;
+    n = t;
+  }
+  return a;
+};
+
+/*
 	Function: valueOf
 	Convert a <BigInteger> to a native JavaScript integer.
 
@@ -1540,14 +1568,14 @@ BigInteger.prototype.log = function() {
 
 	See Also:
 
-		<toString>, <toJSValue>
+		<toString>, <doubleValue>
 */
 BigInteger.prototype.valueOf = function() {
 	return parseInt(this.toString(), 10);
 };
 
 /*
-	Function: toJSValue
+	Function: doubleValue
 	Convert a <BigInteger> to a native JavaScript integer.
 
 	This is the same as valueOf, but more explicitly named.
@@ -1560,7 +1588,7 @@ BigInteger.prototype.valueOf = function() {
 
 		<toString>, <valueOf>
 */
-BigInteger.prototype.toJSValue = function() {
+BigInteger.prototype.doubleValue = function() {
 	return parseInt(this.toString(), 10);
 };
 
@@ -1590,7 +1618,7 @@ BigInteger.MAX_EXP = MAX_EXP;
 
 	(function() {
 		var i, fn;
-		var unary = "toJSValue,isEven,isOdd,sign,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev,log".split(",");
+		var unary = "doubleValue,isEven,isOdd,signum,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev,log".split(",");
 		var binary = "compare,remainder,divRem,subtract,add,quotient,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
@@ -1614,6 +1642,22 @@ BigInteger.MAX_EXP = MAX_EXP;
 		};
 	})();
 })();
+
+/*
+	Function: compare
+	Deprecated synonym for <compareTo>.
+*/
+BigInteger.prototype.compare = BigInteger.prototype.compareTo;
+/*
+	Function: toJSValue
+	Deprecated synonym for <doubleValue>.
+*/
+BigInteger.prototype.toJSValue = BigInteger.prototype.doubleValue;
+/*
+	Function: sign
+	Deprecated synonym for <signum>.
+*/
+BigInteger.prototype.sign = BigInteger.prototype.signum;
 
 exports.BigInteger = BigInteger;
 })(typeof exports !== 'undefined' ? exports : this);

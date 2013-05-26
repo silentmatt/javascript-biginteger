@@ -501,28 +501,28 @@ function testConstants() {
 	checkBigInteger(BigInteger.MAX_EXP, null, 1);
 };
 
-function testToJSValue() {
+function testDoubleValue() {
 	var narray = [
-		BigInteger._construct([], 1).toJSValue(),
-		BigInteger(-1).toJSValue(),
-		BigInteger(-123).toJSValue(),
-		BigInteger(456).toJSValue(),
-		BigInteger("+42").toJSValue(),
-		BigInteger("23x10^5").toJSValue(),
-		BigInteger("342.5 x 10 ^ -2").toJSValue(),
-		BigInteger("-23x10^5").toJSValue(),
-		BigInteger("-3425 x 10 ^ -2").toJSValue(),
-		BigInteger("23.45x10^5").toJSValue(),
-		BigInteger("3425e-12").toJSValue(),
-		BigInteger("-3425e8").toJSValue(),
-		BigInteger("+3425e0").toJSValue(),
-		BigInteger("0xDeadBeef").toJSValue(),
-		BigInteger("-0c715").toJSValue(),
-		BigInteger("+0b1101").toJSValue(),
-		BigInteger.parse("+42", 5).toJSValue(),
-		BigInteger.parse("+42", 5).toJSValue(),
-		BigInteger.parse("12abz", 36).toJSValue(),
-		BigInteger.parse("-0C715").toJSValue()
+		BigInteger._construct([], 1).doubleValue(),
+		BigInteger(-1).doubleValue(),
+		BigInteger(-123).doubleValue(),
+		BigInteger(456).doubleValue(),
+		BigInteger("+42").doubleValue(),
+		BigInteger("23x10^5").doubleValue(),
+		BigInteger("342.5 x 10 ^ -2").doubleValue(),
+		BigInteger("-23x10^5").doubleValue(),
+		BigInteger("-3425 x 10 ^ -2").doubleValue(),
+		BigInteger("23.45x10^5").doubleValue(),
+		BigInteger("3425e-12").doubleValue(),
+		BigInteger("-3425e8").doubleValue(),
+		BigInteger("+3425e0").doubleValue(),
+		BigInteger("0xDeadBeef").doubleValue(),
+		BigInteger("-0c715").doubleValue(),
+		BigInteger("+0b1101").doubleValue(),
+		BigInteger.parse("+42", 5).doubleValue(),
+		BigInteger.parse("+42", 5).doubleValue(),
+		BigInteger.parse("12abz", 36).doubleValue(),
+		BigInteger.parse("-0C715").doubleValue()
 	];
 	var jsarray = [
 		0,
@@ -660,9 +660,9 @@ function testCompareAbs() {
 	});
 };
 
-function testCompare() {
+function testCompareTo() {
 	runBinaryOperationTest(compareResults, function(a, b) {
-		return a.compare(b);
+		return a.compareTo(b);
 	});
 };
 
@@ -708,9 +708,9 @@ function testIsOdd() {
 	});
 };
 
-function testSign() {
+function testSignum() {
 	runUnaryOperationTest(signResults, function(a) {
-		return a.sign();
+		return a.signum();
 	});
 };
 
@@ -752,7 +752,6 @@ function testModPow() {
 	powValues, powValues, powValues);
 };
 
-
 function TestBigInteger() {
 	this.start = new Date();
 }
@@ -765,7 +764,7 @@ TestBigInteger.prototype = {
 	testParse: testParse,
 	testParseFail: testParseFail,
 	testToString: testToString,
-	testToJSValue: testToJSValue,
+	testDoubleValue: testDoubleValue,
 	testValueOf: testValueOf,
 /* Unary Functions */
 	testNegate: testNegate,
@@ -783,14 +782,14 @@ TestBigInteger.prototype = {
 	testPow: testPow,
 /* Comparisons/Information */
 	testCompareAbs: testCompareAbs,
-	testCompare: testCompare,
+	testCompareTo: testCompareTo,
 	testIsUnit: testIsUnit,
 	testIsZero: testIsZero,
 	testIsPositive: testIsPositive,
 	testIsNegative: testIsNegative,
 	testIsEven: testIsEven,
 	testIsOdd: testIsOdd,
-	testSign: testSign,
+	testSignum: testSignum,
 /* Trinary Functions */
 	testModPow: testModPow,
 
