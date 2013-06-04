@@ -36,8 +36,6 @@
 	> BigInteger(4).multiply(5); // returns BigInteger(20);
 	> BigInteger.multiply(4, 5); // returns BigInteger(20);
 
-	> var a = 42;
-	> var a = BigInteger.doubleValue("0b101010"); // Not completely useless...
 */
 
 var CONSTRUCT = {}; // Unique token to call "private" version of constructor
@@ -1505,7 +1503,7 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	This is equivalent to
 
-	> Math.log(this.doubleValue())
+	> Math.log(this.valueOf())
 
 	but handles values outside of the native number range.
 
@@ -1515,7 +1513,7 @@ BigInteger.prototype.modPow = function(exponent, modulus) {
 
 	See Also:
 
-		<doubleValue>
+		<valueOf>
 */
 BigInteger.prototype.log = function() {
 	switch (this._s) {
@@ -1568,14 +1566,14 @@ BigInteger.prototype.gcd = function (n) {
 
 	See Also:
 
-		<toString>, <doubleValue>
+		<toString>, <valueOf>
 */
 BigInteger.prototype.valueOf = function() {
 	return parseInt(this.toString(), 10);
 };
 
 /*
-	Function: doubleValue
+	Function: valueOf
 	Convert a <BigInteger> to a native JavaScript integer.
 
 	This is the same as valueOf, but more explicitly named.
@@ -1588,7 +1586,7 @@ BigInteger.prototype.valueOf = function() {
 
 		<toString>, <valueOf>
 */
-BigInteger.prototype.doubleValue = function() {
+BigInteger.prototype.valueOf = function() {
 	return parseInt(this.toString(), 10);
 };
 
@@ -1618,7 +1616,7 @@ BigInteger.MAX_EXP = MAX_EXP;
 
 	(function() {
 		var i, fn;
-		var unary = "doubleValue,isEven,isOdd,signum,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev,log".split(",");
+		var unary = "isEven,isOdd,signum,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev,log".split(",");
 		var binary = "compare,remainder,divRem,subtract,add,quotient,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
@@ -1650,9 +1648,9 @@ BigInteger.MAX_EXP = MAX_EXP;
 BigInteger.prototype.compare = BigInteger.prototype.compareTo;
 /*
 	Function: toJSValue
-	Deprecated synonym for <doubleValue>.
+	Deprecated synonym for <valueOf>.
 */
-BigInteger.prototype.toJSValue = BigInteger.prototype.doubleValue;
+BigInteger.prototype.toJSValue = BigInteger.prototype.valueOf;
 /*
 	Function: sign
 	Deprecated synonym for <signum>.

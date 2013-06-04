@@ -501,28 +501,28 @@ function testConstants() {
 	checkBigInteger(BigInteger.MAX_EXP, null, 1);
 };
 
-function testDoubleValue() {
+function testToJSValue() {
 	var narray = [
-		BigInteger._construct([], 1).doubleValue(),
-		BigInteger(-1).doubleValue(),
-		BigInteger(-123).doubleValue(),
-		BigInteger(456).doubleValue(),
-		BigInteger("+42").doubleValue(),
-		BigInteger("23x10^5").doubleValue(),
-		BigInteger("342.5 x 10 ^ -2").doubleValue(),
-		BigInteger("-23x10^5").doubleValue(),
-		BigInteger("-3425 x 10 ^ -2").doubleValue(),
-		BigInteger("23.45x10^5").doubleValue(),
-		BigInteger("3425e-12").doubleValue(),
-		BigInteger("-3425e8").doubleValue(),
-		BigInteger("+3425e0").doubleValue(),
-		BigInteger("0xDeadBeef").doubleValue(),
-		BigInteger("-0c715").doubleValue(),
-		BigInteger("+0b1101").doubleValue(),
-		BigInteger.parse("+42", 5).doubleValue(),
-		BigInteger.parse("+42", 5).doubleValue(),
-		BigInteger.parse("12abz", 36).doubleValue(),
-		BigInteger.parse("-0C715").doubleValue()
+		BigInteger._construct([], 1).valueOf(),
+		BigInteger(-1).valueOf(),
+		BigInteger(-123).valueOf(),
+		BigInteger(456).valueOf(),
+		BigInteger("+42").valueOf(),
+		BigInteger("23x10^5").valueOf(),
+		BigInteger("342.5 x 10 ^ -2").valueOf(),
+		BigInteger("-23x10^5").valueOf(),
+		BigInteger("-3425 x 10 ^ -2").valueOf(),
+		BigInteger("23.45x10^5").valueOf(),
+		BigInteger("3425e-12").valueOf(),
+		BigInteger("-3425e8").valueOf(),
+		BigInteger("+3425e0").valueOf(),
+		BigInteger("0xDeadBeef").valueOf(),
+		BigInteger("-0c715").valueOf(),
+		BigInteger("+0b1101").valueOf(),
+		BigInteger.parse("+42", 5).valueOf(),
+		BigInteger.parse("+42", 5).valueOf(),
+		BigInteger.parse("12abz", 36).valueOf(),
+		BigInteger.parse("-0C715").valueOf()
 	];
 	var jsarray = [
 		0,
@@ -764,7 +764,7 @@ TestBigInteger.prototype = {
 	testParse: testParse,
 	testParseFail: testParseFail,
 	testToString: testToString,
-	testDoubleValue: testDoubleValue,
+	testToJSValue: testToJSValue,
 	testValueOf: testValueOf,
 /* Unary Functions */
 	testNegate: testNegate,
