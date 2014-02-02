@@ -85,7 +85,7 @@ function BigInteger(n, s, token) {
 		else if (typeof n === "undefined") {
 			return ZERO;
 		}
-		return BigInteger.parse(n);
+		return BigInteger.parse(n, s);
 	}
 
 	n = n || [];  // Provide the nullary constructor for subclasses.
@@ -709,7 +709,7 @@ BigInteger.prototype.subtract = function(n) {
 
 	See Also:
 
-		<compare>, <abs>
+		<compareTo>, <abs>
 */
 BigInteger.prototype.compareAbs = function(n) {
 	if (this === n) {
@@ -751,7 +751,7 @@ BigInteger.prototype.compareAbs = function(n) {
 };
 
 /*
-	Function: compare
+	Function: compareTo
 	Compare two <BigIntegers>.
 
 	Parameters:
@@ -766,7 +766,7 @@ BigInteger.prototype.compareAbs = function(n) {
 
 		<compareAbs>, <isPositive>, <isNegative>, <isUnit>
 */
-BigInteger.prototype.compare = function(n) {
+BigInteger.prototype.compareTo = function(n) {
 	if (this === n) {
 		return 0;
 	}
@@ -787,6 +787,12 @@ BigInteger.prototype.compare = function(n) {
 };
 
 /*
+	Function: divide
+	Deprecated synonym for <compareTo>.
+*/
+BigInteger.prototype.compare = BigInteger.prototype.compareTo;
+
+/*
 	Function: isUnit
 	Return true iff *this* is either 1 or -1.
 
@@ -796,7 +802,7 @@ BigInteger.prototype.compare = function(n) {
 
 	See Also:
 
-		<isZero>, <isNegative>, <isPositive>, <compareAbs>, <compare>,
+		<isZero>, <isNegative>, <isPositive>, <compareAbs>, <compareTo>,
 		<BigInteger.ONE>, <BigInteger.M_ONE>
 */
 BigInteger.prototype.isUnit = function() {
@@ -1272,7 +1278,7 @@ BigInteger.prototype.isOdd = function() {
 
 	See Also:
 
-		<isZero>, <isPositive>, <isNegative>, <compare>, <BigInteger.ZERO>
+		<isZero>, <isPositive>, <isNegative>, <compareTo>, <BigInteger.ZERO>
 */
 BigInteger.prototype.sign = function() {
 	return this._s;
@@ -1284,11 +1290,11 @@ BigInteger.prototype.sign = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == 1.
+		true if *this*.compareTo(<BigInteger.ZERO>) == 1.
 
 	See Also:
 
-		<sign>, <isZero>, <isNegative>, <isUnit>, <compare>, <BigInteger.ZERO>
+		<sign>, <isZero>, <isNegative>, <isUnit>, <compareTo>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isPositive = function() {
 	return this._s > 0;
@@ -1300,11 +1306,11 @@ BigInteger.prototype.isPositive = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == -1.
+		true if *this*.compareTo(<BigInteger.ZERO>) == -1.
 
 	See Also:
 
-		<sign>, <isPositive>, <isZero>, <isUnit>, <compare>, <BigInteger.ZERO>
+		<sign>, <isPositive>, <isZero>, <isUnit>, <compareTo>, <BigInteger.ZERO>
 */
 BigInteger.prototype.isNegative = function() {
 	return this._s < 0;
@@ -1316,7 +1322,7 @@ BigInteger.prototype.isNegative = function() {
 
 	Returns:
 
-		true if *this*.compare(<BigInteger.ZERO>) == 0.
+		true if *this*.compareTo(<BigInteger.ZERO>) == 0.
 
 	See Also:
 
@@ -1591,7 +1597,7 @@ BigInteger.MAX_EXP = MAX_EXP;
 	(function() {
 		var i, fn;
 		var unary = "toJSValue,isEven,isOdd,sign,isZero,isNegative,abs,isUnit,square,negate,isPositive,toString,next,prev,log".split(",");
-		var binary = "compare,remainder,divRem,subtract,add,quotient,divide,multiply,pow,compareAbs".split(",");
+		var binary = "compareTo,compare,remainder,divRem,subtract,add,quotient,divide,multiply,pow,compareAbs".split(",");
 		var trinary = ["modPow"];
 
 		for (i = 0; i < unary.length; i++) {

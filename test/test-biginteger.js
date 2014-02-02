@@ -24,7 +24,7 @@ var nextResults = getAnswers("next");
 var prevResults = getAnswers("prev");
 var absResults = getAnswers("abs");
 var compareAbsResults = getAnswers("compareAbs");
-var compareResults = getAnswers("compare");
+var compareToResults = getAnswers("compare");
 var isUnitResults = getAnswers("isUnit");
 var isZeroResults = getAnswers("isZero");
 var isPositiveResults = getAnswers("isPositive");
@@ -660,9 +660,9 @@ function testCompareAbs() {
 	});
 };
 
-function testCompare() {
-	runBinaryOperationTest(compareResults, function(a, b) {
-		return a.compare(b);
+function testCompareTo() {
+	runBinaryOperationTest(compareToResults, function(a, b) {
+		return a.compareTo(b);
 	});
 };
 
@@ -783,7 +783,7 @@ TestBigInteger.prototype = {
 	testPow: testPow,
 /* Comparisons/Information */
 	testCompareAbs: testCompareAbs,
-	testCompare: testCompare,
+	testCompareTo: testCompareTo,
 	testIsUnit: testIsUnit,
 	testIsZero: testIsZero,
 	testIsPositive: testIsPositive,
