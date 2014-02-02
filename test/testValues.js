@@ -39,12 +39,8 @@ var testStrings = [
 	"-3637207813391075449499802309344516805263882000874223693582254353805168176127378"
 ];
 
-var testValues1 = testStrings.map(function (s) {
-  return BigInteger.parse(s, 10);
-});
-var testValues2 = testStrings.map(function (s) {
-  return BigInteger.parse(s, 10);
-});
+var testValues1 = testStrings.map(BigInteger);
+var testValues2 = testStrings.map(BigInteger);
 
 var shortTestStrings = [
 	"-1","-2","0",
@@ -53,6 +49,4 @@ var shortTestStrings = [
 	"1157088278178259580357648900890859241864806376958863839397325291381770958183861770602065951818156880455074305",
 	"99999", "-99999"
 ];
-var shortTestValues = shortTestStrings.map(function (s) {
-  return BigInteger.parse(s, 10);
-});
+var shortTestValues = shortTestStrings.map(BigInteger);
