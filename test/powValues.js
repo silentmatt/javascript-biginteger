@@ -23,4 +23,6 @@ var powValues = [
 	123,
 	1000,
 	9876543210
-].map(BigInteger);
+].map(function (n) {
+  return new BigInteger(String(n));
+});
