@@ -1097,10 +1097,10 @@ BigInteger.prototype.divRem = function(n) {
 	var guess;
 
 	var part = new BigInteger([], 0, CONSTRUCT);
-	part._s = 1;
 
 	while (b_index) {
 		part._d.unshift(b_digits[--b_index]);
+		part = new BigInteger(part._d, 1, CONSTRUCT);
 
 		if (part.compareAbs(n) < 0) {
 			quot.push(0);
@@ -1134,9 +1134,6 @@ BigInteger.prototype.divRem = function(n) {
 		}
 		var diff = part.subtract(check);
 		part._d = diff._d.slice();
-		if (part._d.length === 0) {
-			part._s = 0;
-		}
 	}
 
 	return [new BigInteger(quot.reverse(), sign, CONSTRUCT),
