@@ -1,5 +1,5 @@
 /*
-	JavaScript BigInteger library version 0.9
+	JavaScript BigInteger library version 0.9.1
 	http://silentmatt.com/biginteger/
 
 	Copyright (c) 2009 Matthew Crumley <email@matthewcrumley.com>
