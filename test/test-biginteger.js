@@ -1,103 +1,6 @@
 load("../biginteger.js");
 load("test.js");
 
-load("testValues.js");
-load("powValues.js");
-
-function getAnswers(file) {
-	file = "expected/" + file + ".js";
-	if (this.readFile) {
-		eval(readFile(file));
-	}
-	else {
-		load(file);
-	}
-	return answers;
-}
-
-var addResults = getAnswers("add");
-var subtractResults = getAnswers("subtract");
-var multiplyResults = getAnswers("multiply");
-var divRemResults = getAnswers("divRem");
-var negateResults = getAnswers("negate");
-var nextResults = getAnswers("next");
-var prevResults = getAnswers("prev");
-var absResults = getAnswers("abs");
-var compareAbsResults = getAnswers("compareAbs");
-var compareResults = getAnswers("compare");
-var isUnitResults = getAnswers("isUnit");
-var isZeroResults = getAnswers("isZero");
-var isPositiveResults = getAnswers("isPositive");
-var isNegativeResults = getAnswers("isNegative");
-var squareResults = getAnswers("square");
-var isEvenResults = getAnswers("isEven");
-var isOddResults = getAnswers("isOdd");
-var signResults = getAnswers("sign");
-var exp10Results = getAnswers("exp10");
-var powResults = getAnswers("pow");
-var modPowResults = getAnswers("modPow");
-
-function runUnaryOperationTest(expect, test, values) {
-	values = values || testValues1;
-
-	var n = values.length;
-	for (var i = 0; i < n; i++) {
-		var expected = expect[i];
-		var result = test(values[i]);
-		if (result instanceof BigInteger) {
-			checkBigInteger(result);
-		}
-		if (expected !== result) {
-			fail(i + ": expected <" + expected + "> got <" + result + ">");
-		}
-	}
-}
-
-function runBinaryOperationTest(expect, test, values1, values2) {
-	values1 = values1 || testValues1;
-	values2 = values2 || testValues2;
-
-	var n1 = values1.length;
-	var n2 = values2.length;
-	for (var i = 0; i < n1; i++) {
-		for (var j = 0; j < n2; j++) {
-			var expected = expect[i * n2 + j];
-			var result = test(values1[i], values2[j]);
-			if (expected !== result) {
-				fail(i + "," + j + ": expected <" + expected + "> got <" + result + ">");
-			}
-		}
-	}
-}
-
-function runTrinaryOperationTest(expect, test, values1, values2, values3) {
-	values1 = values1 || testValues1;
-	values2 = values2 || testValues2;
-	values3 = values3 || shortTestValues;
-
-	var n1 = values1.length;
-	var n2 = values2.length;
-	var n3 = values3.length;
-	for (var i = 0; i < n1; i++) {
-		for (var j = 0; j < n2; j++) {
-			for (var k = 0; k < n3; k++) {
-				var expected = expect[(i * n2 + j) * n3 + k];
-				var result = test(values1[i], values2[j], values3[k]);
-				if (result instanceof BigInteger) {
-					checkBigInteger(result);
-				}
-				if (expected !== result) {
-					fail([i,j,k].join(",") + ": expected <" + expected + "> got <" + result + ">");
-				}
-			}
-		}
-	}
-}
-
-function runShortBinaryOperationTest(expect, test) {
-	runBinaryOperationTest(expect, test, testValues1, shortTestValues);
-}
-
 function checkBigInteger(n, d, s) {
 	assertPropertyExists(n, "_d");
 	assertPropertyExists(n, "_s");
@@ -106,7 +9,7 @@ function checkBigInteger(n, d, s) {
 	var digits = n._d;
 
 	if (sign === 0) {
-		assertTrue(digits.length === 0, "sign is zero, but array length is " + digits.length);
+		assertTrue(digits.length === 0, "sign is zero, but array length is " + digits.length + ": " + JSON.stringify(n));
 	}
 	if (digits.length === 0) {
 		assertTrue(sign === 0, "array length is zero, but sign is " + sign);
@@ -123,6 +26,18 @@ function checkBigInteger(n, d, s) {
 	}
 	if (s) {
 		assertEquals(s, sign);
+	}
+}
+
+function assertBigIntegerEquals(actual, expected) {
+	if (Array.isArray(expected)) {
+		for (var i = 0; i < expected.length; i++) {
+			assertBigIntegerEquals(actual[i], expected[i]);
+		}
+	}
+	else {
+		expected = BigInteger(expected);
+		checkBigInteger(actual, expected._d, expected._s);
 	}
 }
 
@@ -435,53 +350,7 @@ function testParseFail() {
 };
 
 function testToString() {
-	var narray = [
-		BigInteger._construct([], 1),
-		BigInteger(-1),
-		BigInteger(-123),
-		BigInteger(456),
-		BigInteger("+42"),
-		BigInteger("23x10^5"),
-		BigInteger("342.5 x 10 ^ -2"),
-		BigInteger("-23x10^5"),
-		BigInteger("-3425 x 10 ^ -2"),
-		BigInteger("23.45x10^5"),
-		BigInteger("3425e-12"),
-		BigInteger("-3425e8"),
-		BigInteger("+3425e0").toString(10),
-		BigInteger("0xDeadBeef").toString(16),
-		BigInteger("-0c715").toString(8),
-		BigInteger("+0b1101").toString(2),
-		BigInteger.parse("+42", 5).toString(10),
-		BigInteger.parse("+42", 5).toString(5),
-		BigInteger.parse("12abz", 36).toString(36),
-		BigInteger.parse("-0c715"),
-	];
-	var sarray = [
-		"0",
-		"-1",
-		"-123",
-		"456",
-		"42",
-		"2300000",
-		"3",
-		"-2300000",
-		"-34",
-		"2345000",
-		"0",
-		"-342500000000",
-		"3425",
-		"DEADBEEF",
-		"-715",
-		"1101",
-		"22",
-		"42",
-		"12ABZ",
-		"-461"
-	];
-
-	assertArraySimilar(sarray, narray);
-	assertArraySimilar(testStrings, testValues1);
+	runLines('test-toString.js');
 };
 
 function testConstants() {
@@ -502,254 +371,149 @@ function testConstants() {
 };
 
 function testToJSValue() {
-	var narray = [
-		BigInteger._construct([], 1).toJSValue(),
-		BigInteger(-1).toJSValue(),
-		BigInteger(-123).toJSValue(),
-		BigInteger(456).toJSValue(),
-		BigInteger("+42").toJSValue(),
-		BigInteger("23x10^5").toJSValue(),
-		BigInteger("342.5 x 10 ^ -2").toJSValue(),
-		BigInteger("-23x10^5").toJSValue(),
-		BigInteger("-3425 x 10 ^ -2").toJSValue(),
-		BigInteger("23.45x10^5").toJSValue(),
-		BigInteger("3425e-12").toJSValue(),
-		BigInteger("-3425e8").toJSValue(),
-		BigInteger("+3425e0").toJSValue(),
-		BigInteger("0xDeadBeef").toJSValue(),
-		BigInteger("-0c715").toJSValue(),
-		BigInteger("+0b1101").toJSValue(),
-		BigInteger.parse("+42", 5).toJSValue(),
-		BigInteger.parse("+42", 5).toJSValue(),
-		BigInteger.parse("12abz", 36).toJSValue(),
-		BigInteger.parse("-0C715").toJSValue()
-	];
-	var jsarray = [
-		0,
-		-1,
-		-123,
-		456,
-		42,
-		parseInt("2300000", 10),
-		parseInt("3", 10),
-		parseInt("-2300000", 10),
-		parseInt("-34", 10),
-		parseInt("2345000", 10),
-		parseInt("0", 10),
-		parseInt("-342500000000", 10),
-		parseInt("3425", 10),
-		parseInt("DeadBeef", 16),
-		parseInt("-715", 8),
-		parseInt("1101", 2),
-		parseInt("22", 10),
-		parseInt("42", 5),
-		parseInt("12ABZ", 36),
-		parseInt("-461", 10)
-	];
+	assertEquals(BigInteger._construct([], 1).toJSValue(), 0);
+	assertEquals(BigInteger(-1).toJSValue(), -1);
+	assertEquals(BigInteger(-123).toJSValue(), -123);
+	assertEquals(BigInteger(456).toJSValue(), 456);
+	assertEquals(BigInteger("+42").toJSValue(), 42);
+	assertEquals(BigInteger("23x10^5").toJSValue(), 2300000);
+	assertEquals(BigInteger("342.5 x 10 ^ -2").toJSValue(), 3);
+	assertEquals(BigInteger("-23x10^5").toJSValue(), -2300000);
+	assertEquals(BigInteger("-3425 x 10 ^ -2").toJSValue(), -34);
+	assertEquals(BigInteger("23.45x10^5").toJSValue(), 2345000);
+	assertEquals(BigInteger("3425e-12").toJSValue(), 0);
+	assertEquals(BigInteger("-3425e8").toJSValue(), -342500000000);
+	assertEquals(BigInteger("+3425e0").toJSValue(), 3425);
+	assertEquals(BigInteger("0xDeadBeef").toJSValue(), parseInt("DeadBeef", 16));
+	assertEquals(BigInteger("-0c715").toJSValue(), parseInt("-715", 8));
+	assertEquals(BigInteger("+0b1101").toJSValue(), parseInt("1101", 2));
+	assertEquals(BigInteger.parse("+42", 5).toJSValue(), 22);
+	assertEquals(BigInteger.parse("+42", 5).toJSValue(), parseInt("42", 5));
+	assertEquals(BigInteger.parse("12abz", 36).toJSValue(), parseInt("12ABZ", 36));
+	assertEquals(BigInteger.parse("-0C715").toJSValue(), -461);
 
-	assertArrayEquals(jsarray, narray);
-	assertArrayEquals(testStrings.map(Number), testValues1.map(Number));
+	runLines('test-toJSValue.js');
 };
 
 function testValueOf() {
-	var narray = [
-		+BigInteger._construct([], 1),
-		+BigInteger(-1),
-		+BigInteger(-123),
-		+BigInteger(456),
-		+BigInteger("+42"),
-		+BigInteger("23x10^5"),
-		+BigInteger("342.5 x 10 ^ -2"),
-		+BigInteger("-23x10^5"),
-		+BigInteger("-3425 x 10 ^ -2"),
-		+BigInteger("23.45x10^5"),
-		+BigInteger("3425e-12"),
-		+BigInteger("-3425e8"),
-		+BigInteger("+3425e0"),
-		+BigInteger("0xDeadBeef"),
-		+BigInteger("-0c715"),
-		+BigInteger("+0b1101"),
-		+BigInteger.parse("+42", 5),
-		+BigInteger.parse("+42", 5),
-		+BigInteger.parse("12abz", 36),
-		+BigInteger.parse("-0c715")
-	];
-	var jsarray = [
-		0,
-		-1,
-		-123,
-		456,
-		42,
-		parseInt("2300000", 10),
-		parseInt("3", 10),
-		parseInt("-2300000", 10),
-		parseInt("-34", 10),
-		parseInt("2345000", 10),
-		parseInt("0", 10),
-		parseInt("-342500000000", 10),
-		parseInt("3425", 10),
-		parseInt("DeadBeef", 16),
-		parseInt("-715", 8),
-		parseInt("1101", 2),
-		parseInt("22", 10),
-		parseInt("42", 5),
-		parseInt("12ABZ", 36),
-		parseInt("-461", 10)
-	];
+	assertEquals(BigInteger._construct([], 1).valueOf(), 0);
+	assertEquals(BigInteger(-1).valueOf(), -1);
+	assertEquals(BigInteger(-123).valueOf(), -123);
+	assertEquals(BigInteger(456).valueOf(), 456);
+	assertEquals(BigInteger("+42").valueOf(), 42);
+	assertEquals(BigInteger("23x10^5").valueOf(), 2300000);
+	assertEquals(BigInteger("342.5 x 10 ^ -2").valueOf(), 3);
+	assertEquals(BigInteger("-23x10^5").valueOf(), -2300000);
+	assertEquals(BigInteger("-3425 x 10 ^ -2").valueOf(), -34);
+	assertEquals(BigInteger("23.45x10^5").valueOf(), 2345000);
+	assertEquals(BigInteger("3425e-12").valueOf(), 0);
+	assertEquals(BigInteger("-3425e8").valueOf(), -342500000000);
+	assertEquals(BigInteger("+3425e0").valueOf(), 3425);
+	assertEquals(BigInteger("0xDeadBeef").valueOf(), parseInt("DeadBeef", 16));
+	assertEquals(BigInteger("-0c715").valueOf(), parseInt("-715", 8));
+	assertEquals(BigInteger("+0b1101").valueOf(), parseInt("1101", 2));
+	assertEquals(BigInteger.parse("+42", 5).valueOf(), 22);
+	assertEquals(BigInteger.parse("+42", 5).valueOf(), parseInt("42", 5));
+	assertEquals(BigInteger.parse("12abz", 36).valueOf(), parseInt("12ABZ", 36));
+	assertEquals(BigInteger.parse("-0c715").valueOf(), -461);
 
-	assertArrayEquals(jsarray, narray);
-	assertArrayEquals(testStrings.map(Number), testValues1.map(Number));
+	runLines('test-valueOf.js');
 };
 
-function testAdd() {
-	runBinaryOperationTest(addResults, function(a, b) {
-		return a.add(b).toString();
+function runLines(filename) {
+	var text = readFile(filename);
+	var lines = text.split('\n');
+	lines.forEach(function(line) {
+		eval(line);
 	});
+}
+
+function testAdd() {
+	runLines('test-add.js');
 };
 
 function testSubtract() {
-	runBinaryOperationTest(subtractResults, function(a, b) {
-		return a.subtract(b).toString();
-	});
+	runLines('test-subtract.js');
 };
 
 function testMultiply() {
-	runBinaryOperationTest(multiplyResults, function(a, b) {
-		return a.multiply(b).toString();
-	});
+	runLines('test-multiply.js');
 };
 
 function testDivRem() {
-	runBinaryOperationTest(divRemResults, function(a, b) {
-		try {
-			return a.divRem(b).toString();
-		}
-		catch (e) {
-			return e.message;
-		}
-	});
+	runLines('test-divide.js');
+	runLines('test-divide-errors.js');
 };
 
 function testNegate() {
-	runUnaryOperationTest(negateResults, function(a) {
-		return a.negate().toString();
-	});
+	runLines('test-negate.js');
 };
 
 function testNext() {
-	runUnaryOperationTest(nextResults, function(a) {
-		return a.next().toString();
-	});
+	runLines('test-next.js');
 };
 
 function testPrev() {
-	runUnaryOperationTest(prevResults, function(a) {
-		return a.prev().toString();
-	});
+	runLines('test-prev.js');
 };
 
 function testAbs() {
-	runUnaryOperationTest(absResults, function(a) {
-		return a.abs().toString();
-	});
+	runLines('test-abs.js');
 };
 
 function testCompareAbs() {
-	runBinaryOperationTest(compareAbsResults, function(a, b) {
-		return a.compareAbs(b);
-	});
+	runLines('test-compareAbs.js');
 };
 
 function testCompare() {
-	runBinaryOperationTest(compareResults, function(a, b) {
-		return a.compare(b);
-	});
+	runLines('test-compare.js');
 };
 
 function testIsUnit() {
-	runUnaryOperationTest(isUnitResults, function(a) {
-		return a.isUnit();
-	});
+	runLines('test-isUnit.js');
 };
 
 function testIsZero() {
-	runUnaryOperationTest(isZeroResults, function(a) {
-		return a.isZero();
-	});
+	runLines('test-isZero.js');
 };
 
 function testIsPositive() {
-	runUnaryOperationTest(isPositiveResults, function(a) {
-		return a.isPositive();
-	});
+	runLines('test-isPositive.js');
 };
 
 function testIsNegative() {
-	runUnaryOperationTest(isNegativeResults, function(a) {
-		return a.isNegative();
-	});
+	runLines('test-isNegative.js');
 };
 
 function testSquare() {
-	runUnaryOperationTest(squareResults, function(a) {
-		return a.square().toString();
-	});
+	runLines('test-square.js');
 };
 
 function testIsEven() {
-	runUnaryOperationTest(isEvenResults, function(a) {
-		return a.isEven();
-	});
+	runLines('test-isEven.js');
 };
 
 function testIsOdd() {
-	runUnaryOperationTest(isOddResults, function(a) {
-		return a.isOdd();
-	});
+	runLines('test-isOdd.js');
 };
 
 function testSign() {
-	runUnaryOperationTest(signResults, function(a) {
-		return a.sign();
-	});
+	runLines('test-sign.js');
 };
 
 function testExp10() {
-	runShortBinaryOperationTest(exp10Results, function(a, b) {
-		if (Math.abs(Number(b)) > 1000) {
-			b = Number(BigInteger.MAX_EXP.next());
-		}
-		try {
-			return a.exp10(b).toString();
-		}
-		catch (e) {
-			return e.message;
-		}
-	});
+	runLines('test-exp10.js');
+	runLines('test-exp10-errors.js');
 };
 
 function testPow() {
-	runBinaryOperationTest(powResults, function(a, b) {
-		try {
-			return a.pow(b).toString();
-		}
-		catch (e) {
-			return e.message;
-		}
-	},
-	powValues, powValues);
+	runLines('test-pow.js');
+	runLines('test-pow-errors.js');
 };
 
 function testModPow() {
-	runTrinaryOperationTest(modPowResults, function(a, b, c) {
-		try {
-			return a.modPow(b, c).toString();
-		}
-		catch (e) {
-			return e.message;
-		}
-	},
-	powValues, powValues, powValues);
+	runLines('test-modPow.js');
+	runLines('test-modPow-errors.js');
 };
 
 
@@ -803,19 +567,5 @@ TestBigInteger.prototype = {
 		}
 	}
 };
-
-function generate() {
-	// (echo 'var answers = ['; js test-biginteger.js | bc | sed -e :a -e '/\\$/N; s/\\\n//; ta' -e 's/^/\t"/' -e 's/$/",/'; echo '];') >expected/xxx.js
-
-	print("scale = 0");
-	runTrinaryOperationTest(new Array(testValues1.length * testValues2.length), function(a, b, c) {
-		//print('print (' + a + ' / ' + b + '), ",", (' + a + ' % ' + b + '), "\\n"');
-		//print("a = " + a + "; b = " + b + "; if (a == b) { 0 } else { if (a < b) { -1 } else { 1 } }");
-		//print("if (" + a + " == 0) { 0 } else { (" + a + ") / abs(" + a + ") }");
-		print("modexp(" + a + "," + b + "," + c + ")");
-		return undefined;
-	}, powValues, powValues, powValues);
-	quit();
-}
 
 runTests(TestBigInteger, +arguments[0]);
