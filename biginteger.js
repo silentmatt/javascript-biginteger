@@ -1358,6 +1358,10 @@ BigInteger.prototype.exp10 = function(n) {
 	if (Math.abs(n) > Number(MAX_EXP)) {
 		throw new Error("exponent too large in BigInteger.exp10");
 	}
+	// Optimization for this == 0. This also keeps us from having to trim zeros in the positive n case
+	if (this._s === 0) {
+		return ZERO;
+	}
 	if (n > 0) {
 		var k = new BigInteger(this._d.slice(), this._s, CONSTRUCT);
 
