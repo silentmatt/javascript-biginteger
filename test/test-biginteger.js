@@ -1,5 +1,13 @@
-load("../biginteger.js");
-load("test.js");
+var BigInteger = require("../biginteger").BigInteger;
+var test = require("./test");
+var fs = require('fs');
+
+var assertEquals = test.assertEquals;
+var assertArrayEquals = test.assertArrayEquals;
+var assertTrue = test.assertTrue;
+var assertThrows = test.assertThrows;
+var assertPropertyExists = test.assertPropertyExists;
+var runTests = test.runTests;
 
 function checkBigInteger(n, d, s) {
 	assertPropertyExists(n, "_d");
@@ -421,7 +429,7 @@ function testValueOf() {
 };
 
 function runLines(filename) {
-	var text = readFile(filename);
+	var text = fs.readFileSync(filename, 'utf8');
 	var lines = text.split('\n');
 	lines.forEach(function(line) {
 		eval(line);
@@ -562,10 +570,10 @@ TestBigInteger.prototype = {
 	tearDown: function(show) {
 		if (show) {
 			var end = new Date();
-			print("        Completed in " + (end - this.start) + "ms");
+			console.log("        Completed in " + (end - this.start) + "ms");
 			this.start = new Date();
 		}
 	}
 };
 
-runTests(TestBigInteger, +arguments[0]);
+runTests(TestBigInteger, +process.argv[2]);

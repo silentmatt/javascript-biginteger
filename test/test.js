@@ -138,7 +138,7 @@ function runTests(testClass, verbose) {
 		if (name in obj && typeof(obj[name]) === "function") {
 			if (log) {
 				return function(message) {
-					print(logPrefix, message);
+					console.log(logPrefix, message);
 					obj[name](log);
 				};
 			}
@@ -187,7 +187,7 @@ function runTests(testClass, verbose) {
 		testObject = new testClass();
 	}
 	catch (ex) {
-		if (verbose > SHOW_NONE) print("Could not instantiate test class:", ex.message);
+		if (verbose > SHOW_NONE) console.log("Could not instantiate test class:", ex.message);
 		return false;
 	}
 
@@ -199,11 +199,11 @@ function runTests(testClass, verbose) {
 	var npass = 0;
 
 	if (ntest === 0) {
-		if (verbose > SHOW_NONE) print("No Tests to run.");
+		if (verbose > SHOW_NONE) console.log("No Tests to run.");
 		return false;
 	}
 
-	if (verbose > SHOW_NONE) print("Running Tests...");
+	if (verbose > SHOW_NONE) console.log("Running Tests...");
 	var startTime = new Date();
 
 	for (var i = 0; i < ntest; i++) {
@@ -211,7 +211,7 @@ function runTests(testClass, verbose) {
 
 		try { setup(displayName); }
 		catch(ex) {
-			if (verbose > SHOW_NONE) print("setUp failed for test", displayName + ":", ex.message);
+			if (verbose > SHOW_NONE) console.log("setUp failed for test", displayName + ":", ex.message);
 			return false;
 		}
 
@@ -220,20 +220,34 @@ function runTests(testClass, verbose) {
 			npass++;
 		}
 		catch (ex) {
-			if (verbose > SHOW_NONE) print("Failed", displayName + ":", ex.message);
+			if (verbose > SHOW_NONE) console.log("Failed", displayName + ":", ex.message);
 		}
 
 		try { teardown(displayName); }
 		catch(ex) {
-			if (verbose > SHOW_NONE) print("tearDown failed for test", displayName + ":", ex.message);
+			if (verbose > SHOW_NONE) console.log("tearDown failed for test", displayName + ":", ex.message);
 			return false;
 		}
 	}
 
 	var endTime = new Date();
 	var elapsed = endTime - startTime;
-	if (verbose > SHOW_NONE) print("\nFinished in " + displayTime(elapsed));
-	if (verbose > SHOW_NONE) print("Passed " + npass + "/" + ntest + " (" + (npass/ntest * 100).toFixed(2) + "%): " + ((npass === ntest) ? "PASS" : "FAIL"));
+	if (verbose > SHOW_NONE) console.log("\nFinished in " + displayTime(elapsed));
+	if (verbose > SHOW_NONE) console.log("Passed " + npass + "/" + ntest + " (" + (npass/ntest * 100).toFixed(2) + "%): " + ((npass === ntest) ? "PASS" : "FAIL"));
 
 	return npass === ntest;
 }
+
+exports.fail = fail;
+exports.assertSimilar = assertSimilar;
+exports.assertEquals = assertEquals;
+exports.assertArrayEquals = assertArrayEquals;
+exports.assertArraySimilar = assertArraySimilar;
+exports.assertEqualsApprox = assertEqualsApprox;
+exports.assertTrue = assertTrue;
+exports.assertFalse = assertFalse;
+exports.assertNaN = assertNaN;
+exports.assertThrows = assertThrows;
+exports.assertPropertyExists = assertPropertyExists;
+exports.assertHasMethod = assertHasMethod;
+exports.runTests = runTests;
