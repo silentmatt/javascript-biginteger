@@ -1,6 +1,6 @@
 # API
 
-* [BigInteger](#biginteger)
+* [BigInteger Class](#biginteger)
   * Static factories
     * [BigInteger()](#constructor)
     * [BigInteger.parse()](#parse)
@@ -74,7 +74,7 @@
 ---
 
 <a id="biginteger"></a>
-## BigInteger
+## BigInteger Class
 
 An arbitrarily-large integer.
 
@@ -140,9 +140,9 @@ Parse a string into a `BigInteger`.
 is not provided, it will be guessed based on the leading characters of `s` as
 follows:
 
-* "0x" or "0X": `base` = 16
-* "0c" or "0C": `base` = 8
-* "0b" or "0B": `base` = 2
+* `"0x"` or `"0X"`: `base` = 16
+* `"0c"` or `"0C"`: `base` = 8
+* `"0b"` or `"0B"`: `base` = 2
 * else: `base` = 10
 
 If no base is provided, or `base` is 10, the number can be in exponential form.
