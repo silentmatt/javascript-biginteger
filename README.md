@@ -24,8 +24,6 @@
         console.log(a.multiply(b).add(c).toString()); // '1234567890987654321'
     </script>
 
-For more details, see the full [API documentation](https://silentmatt.com/biginteger-docs/files/biginteger-js.html).
-
 ## Documentation
 
 [API Documentation](/docs/api.md)
