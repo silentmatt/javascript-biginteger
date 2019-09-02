@@ -18,8 +18,11 @@
     "math",
     "arbitrary-precision",
     "bigint",
+    "bignum",
     "biginteger",
-    "bignumber"
+    "big integer",
+    "bignumber",
+    "big number"
   ],
   "author": "Matthew Crumley <email@matthewcrumley.com>",
   "license": "MIT",
