@@ -1,4 +1,6 @@
-var BigInteger = require("../biginteger").BigInteger;
+var DefaultBigInteger = require("../biginteger").BigInteger;
+var ArrayBigInteger = require("../lib/impl/array").BigInteger;
+
 var test = require("./test");
 var fs = require('fs');
 
@@ -9,7 +11,7 @@ var assertThrows = test.assertThrows;
 var assertPropertyExists = test.assertPropertyExists;
 var runTests = test.runTests;
 
-function checkBigInteger(n, d, s) {
+function checkArrayBigInteger(n, d, s) {
 	assertPropertyExists(n, "_d");
 	assertPropertyExists(n, "_s");
 
@@ -37,6 +39,24 @@ function checkBigInteger(n, d, s) {
 	}
 }
 
+function checkNativeBigInteger(n, d, s) {
+	assertPropertyExists(n, "value");
+
+	var sign = n.sign();
+	var digits = n.value.toString().replace(/^-/, '');
+
+	assertTrue(sign === 0 || sign === 1 || sign === -1, "sign is not one of {-1, 0, 1}: " + sign);
+
+	assertTrue(digits.length > 0, "invalid value");
+
+	if (d != null) {
+		assertEquals(d, digits);
+	}
+	if (s != null) {
+		assertEquals(s, sign);
+	}
+}
+
 function assertBigIntegerEquals(actual, expected) {
 	if (Array.isArray(expected)) {
 		for (var i = 0; i < expected.length; i++) {
@@ -45,209 +65,448 @@ function assertBigIntegerEquals(actual, expected) {
 	}
 	else {
 		expected = BigInteger(expected);
-		checkBigInteger(actual, expected._d, expected._s);
+		if (actual instanceof ArrayBigInteger) {
+			checkArrayBigInteger(actual, expected._d, expected._s);
+		} else {
+			checkNativeBigInteger(actual, expected.value.toString().replace(/^-/, ''), expected.sign());
+		}
 	}
 }
 
-function testConstructor() {
-	var n = BigInteger._construct([], 1);
-	checkBigInteger(n, [], 0);
+function testArrayConstructor() {
+	var n = ArrayBigInteger._construct([], 1);
+	checkArrayBigInteger(n, [], 0);
 
-	n = BigInteger._construct([0,0,0], 1);
-	checkBigInteger(n, [], 0);
+	n = ArrayBigInteger._construct([0,0,0], 1);
+	checkArrayBigInteger(n, [], 0);
 
-	n = BigInteger._construct([1], 1);
-	checkBigInteger(n, [1], 1);
+	n = ArrayBigInteger._construct([1], 1);
+	checkArrayBigInteger(n, [1], 1);
 
-	n = BigInteger._construct([2,0], 1);
-	checkBigInteger(n, [2], 1);
+	n = ArrayBigInteger._construct([2,0], 1);
+	checkArrayBigInteger(n, [2], 1);
 
-	n = BigInteger._construct([3], 0);
-	checkBigInteger(n, [3], 1);
+	n = ArrayBigInteger._construct([3], 0);
+	checkArrayBigInteger(n, [3], 1);
 
-	n = BigInteger._construct([4], -1);
-	checkBigInteger(n, [4], -1);
+	n = ArrayBigInteger._construct([4], -1);
+	checkArrayBigInteger(n, [4], -1);
 
-	n = BigInteger._construct([1,2,3], -1);
-	checkBigInteger(n, [1,2,3], -1);
+	n = ArrayBigInteger._construct([1,2,3], -1);
+	checkArrayBigInteger(n, [1,2,3], -1);
 
 	var a = [3,2,1];
-	n = BigInteger._construct(a, 1);
+	n = ArrayBigInteger._construct(a, 1);
 	a.unshift(4);
-	checkBigInteger(n, [4,3,2,1], 1);
+	checkArrayBigInteger(n, [4,3,2,1], 1);
 };
 
-function testConversion() {
+function testNativeConstructor() {
+	var n = BigInteger._construct(BigInt(0), 1);
+	checkNativeBigInteger(n, '0', 0);
+
+	n = BigInteger._construct(BigInt('000'), 1);
+	checkNativeBigInteger(n, '0', 0);
+
+	n = BigInteger._construct(BigInt(1), 1);
+	checkNativeBigInteger(n, '1', 1);
+
+	n = BigInteger._construct('02', 1);
+	checkNativeBigInteger(n, '2', 1);
+
+	n = BigInteger._construct(BigInt('3'), 0);
+	checkNativeBigInteger(n, '3', 1);
+
+	n = BigInteger._construct(BigInt(4), -1);
+	checkNativeBigInteger(n, '4', -1);
+
+	n = BigInteger._construct(BigInt('123'), -1);
+	checkNativeBigInteger(n, '123', -1);
+};
+
+function testArrayConversion() {
+	var n = ArrayBigInteger(-1);
+	checkArrayBigInteger(n, [1], -1);
+
+	var n = ArrayBigInteger(-123);
+	checkArrayBigInteger(n, [123], -1);
+
+	var n = ArrayBigInteger(4567);
+	checkArrayBigInteger(n, [4567], 1);
+
+	var n = ArrayBigInteger("+42");
+	checkArrayBigInteger(n, [42], 1);
+
+	var n = ArrayBigInteger("23x10^5");
+	checkArrayBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
+
+	var n = ArrayBigInteger("3425 x 10 ^ -2");
+	checkArrayBigInteger(n, [34], 1);
+
+	var n = ArrayBigInteger("342.5 x 10 ^ -2");
+	checkArrayBigInteger(n, [3], 1);
+
+	var n = ArrayBigInteger("-23x10^5");
+	checkArrayBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
+
+	var n = ArrayBigInteger("-3425 x 10 ^ -2");
+	checkArrayBigInteger(n, [34], -1);
+
+	var n = ArrayBigInteger("23.45x10^5");
+	checkArrayBigInteger(n, BigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
+
+	var n = ArrayBigInteger("3425e-12");
+	checkArrayBigInteger(n, [], 0);
+
+	var n = ArrayBigInteger("-3425e8");
+	checkArrayBigInteger(n, BigInteger.base_log10 === 7 ? [0, 34250] : [0, 0, 3425], -1);
+
+	var n = ArrayBigInteger("3425e-12");
+	checkArrayBigInteger(n, [], 0);
+
+	var n = ArrayBigInteger("+3425e0");
+	checkArrayBigInteger(n, [3425], 1);
+
+	var n = ArrayBigInteger("0xDeadBeef");
+	checkArrayBigInteger(n, BigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
+
+	var n = ArrayBigInteger("-0c715");
+	checkArrayBigInteger(n, [461], -1);
+
+	var n = ArrayBigInteger("+0b1101");
+	checkArrayBigInteger(n, [13], 1);
+};
+
+function testNativeConversion() {
 	var n = BigInteger(-1);
-	checkBigInteger(n, [1], -1);
+	checkNativeBigInteger(n, '1', -1);
 
 	var n = BigInteger(-123);
-	checkBigInteger(n, [123], -1);
+	checkNativeBigInteger(n, '123', -1);
 
 	var n = BigInteger(4567);
-	checkBigInteger(n, [4567], 1);
+	checkNativeBigInteger(n, '4567', 1);
 
 	var n = BigInteger("+42");
-	checkBigInteger(n, [42], 1);
+	checkNativeBigInteger(n, '42', 1);
 
 	var n = BigInteger("23x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
+	checkNativeBigInteger(n, '2300000', 1);
 
 	var n = BigInteger("3425 x 10 ^ -2");
-	checkBigInteger(n, [34], 1);
+	checkNativeBigInteger(n, '34', 1);
 
 	var n = BigInteger("342.5 x 10 ^ -2");
-	checkBigInteger(n, [3], 1);
+	checkNativeBigInteger(n, '3', 1);
 
 	var n = BigInteger("-23x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
+	checkNativeBigInteger(n, '2300000', -1);
 
 	var n = BigInteger("-3425 x 10 ^ -2");
-	checkBigInteger(n, [34], -1);
+	checkNativeBigInteger(n, '34', -1);
 
 	var n = BigInteger("23.45x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
+	checkNativeBigInteger(n, '2345000', 1);
 
 	var n = BigInteger("3425e-12");
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	var n = BigInteger("-3425e8");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [0, 34250] : [0, 0, 3425], -1);
+	checkNativeBigInteger(n, '342500000000', -1);
 
 	var n = BigInteger("3425e-12");
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	var n = BigInteger("+3425e0");
-	checkBigInteger(n, [3425], 1);
+	checkNativeBigInteger(n, '3425', 1);
 
 	var n = BigInteger("0xDeadBeef");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
+	checkNativeBigInteger(n, '3735928559', 1);
 
 	var n = BigInteger("-0c715");
-	checkBigInteger(n, [461], -1);
+	checkNativeBigInteger(n, '461', -1);
 
 	var n = BigInteger("+0b1101");
-	checkBigInteger(n, [13], 1);
+	checkNativeBigInteger(n, '13', 1);
 };
 
-function testParse() {
+function testArrayParse() {
+	var n;
+	n = ArrayBigInteger.parse("0", 10);
+	checkArrayBigInteger(n, [], 0);
+
+	n = ArrayBigInteger.parse("");
+	checkArrayBigInteger(n, [], 0);
+
+	n = ArrayBigInteger.parse("1");
+	checkArrayBigInteger(n, [1], 1);
+
+	n = ArrayBigInteger.parse("-1");
+	checkArrayBigInteger(n, [1], -1);
+
+	n = ArrayBigInteger.parse("+42", 10);
+	checkArrayBigInteger(n, [42], 1);
+
+	n = ArrayBigInteger.parse("+42", 5);
+	checkArrayBigInteger(n, [22], 1);
+
+	n = ArrayBigInteger.parse("23x10^5");
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
+
+	n = ArrayBigInteger.parse("3425 x 10 ^ -2");
+	checkArrayBigInteger(n, [34], 1);
+
+	n = ArrayBigInteger.parse("342.5 x 10 ^ -2");
+	checkArrayBigInteger(n, [3], 1);
+
+	n = ArrayBigInteger.parse("-23x10^5");
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
+
+	n = ArrayBigInteger.parse("-3425 x 10 ^ -2");
+	checkArrayBigInteger(n, [34], -1);
+
+	n = ArrayBigInteger.parse("23.45x10^5");
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
+
+	n = ArrayBigInteger.parse("3425e-12");
+	checkArrayBigInteger(n, [], 0);
+
+	n = ArrayBigInteger.parse("-3425e8");
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [0, 34250] : [0,0,3425], -1);
+
+	n = ArrayBigInteger.parse("-3425e-12");
+	checkArrayBigInteger(n, [], 0);
+
+	n = ArrayBigInteger.parse("+3425e0");
+	checkArrayBigInteger(n, [3425], 1);
+
+	n = ArrayBigInteger.parse("0xDeadBeef");
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
+
+	n = ArrayBigInteger.parse("12abz", 36);
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [1786319] : [6319, 178], 1);
+
+	n = ArrayBigInteger.parse("-0c715");
+	checkArrayBigInteger(n, [461], -1);
+
+	n = ArrayBigInteger.parse("+0b1101");
+	checkArrayBigInteger(n, [13], 1);
+
+	n = ArrayBigInteger.parse("1011", 2);
+	checkArrayBigInteger(n, [11], 1);
+
+	n = ArrayBigInteger.parse("1011", 3);
+	checkArrayBigInteger(n, [31], 1);
+
+	n = ArrayBigInteger.parse("1011", 4);
+	checkArrayBigInteger(n, [69], 1);
+
+	n = ArrayBigInteger.parse("1011", 5);
+	checkArrayBigInteger(n, [131], 1);
+
+	n = ArrayBigInteger.parse("1011", 6);
+	checkArrayBigInteger(n, [223], 1);
+
+	n = ArrayBigInteger.parse("1011", 7);
+	checkArrayBigInteger(n, [351], 1);
+
+	n = ArrayBigInteger.parse("1011", 10);
+	checkArrayBigInteger(n, [1011], 1);
+
+	n = ArrayBigInteger.parse("1011", 11);
+	checkArrayBigInteger(n, [1343], 1);
+
+	n = ArrayBigInteger.parse("1011", 12);
+	checkArrayBigInteger(n, [1741], 1);
+
+	n = ArrayBigInteger.parse("1011", 15);
+	checkArrayBigInteger(n, [3391], 1);
+
+	n = ArrayBigInteger.parse("1011", 16);
+	checkArrayBigInteger(n, [4113], 1);
+
+	n = ArrayBigInteger.parse("1011", 36);
+	checkArrayBigInteger(n, ArrayBigInteger.base_log10 === 7 ? [46693] : [6693, 4], 1);
+
+	n = ArrayBigInteger.parse("0b", 16);
+	checkArrayBigInteger(n, [11], 1);
+
+	n = ArrayBigInteger.parse("0c", 16);
+	checkArrayBigInteger(n, [12], 1);
+
+	n = ArrayBigInteger.parse("0b12", 16);
+	checkArrayBigInteger(n, [2834], 1);
+
+	n = ArrayBigInteger.parse("0c12", 16);
+	checkArrayBigInteger(n, [3090], 1);
+
+	n = ArrayBigInteger.parse("0b101", 2);
+	checkArrayBigInteger(n, [5], 1);
+
+	n = ArrayBigInteger.parse("0c101", 8);
+	checkArrayBigInteger(n, [65], 1);
+
+	n = ArrayBigInteger.parse("0x101", 16);
+	checkArrayBigInteger(n, [257], 1);
+
+	ArrayBigInteger.parse("1", 2);
+	ArrayBigInteger.parse("2", 3);
+	ArrayBigInteger.parse("3", 4);
+	ArrayBigInteger.parse("4", 5);
+	ArrayBigInteger.parse("5", 6);
+	ArrayBigInteger.parse("6", 7);
+	ArrayBigInteger.parse("7", 8);
+	ArrayBigInteger.parse("8", 9);
+	ArrayBigInteger.parse("9", 10);
+
+	ArrayBigInteger.parse("a", 11);
+	ArrayBigInteger.parse("b", 12);
+	ArrayBigInteger.parse("c", 13);
+	ArrayBigInteger.parse("d", 14);
+	ArrayBigInteger.parse("e", 15);
+	ArrayBigInteger.parse("f", 16);
+	ArrayBigInteger.parse("g", 17);
+	ArrayBigInteger.parse("h", 18);
+	ArrayBigInteger.parse("i", 19);
+	ArrayBigInteger.parse("j", 20);
+
+	ArrayBigInteger.parse("k", 21);
+	ArrayBigInteger.parse("l", 22);
+	ArrayBigInteger.parse("m", 23);
+	ArrayBigInteger.parse("n", 24);
+	ArrayBigInteger.parse("o", 25);
+	ArrayBigInteger.parse("p", 26);
+	ArrayBigInteger.parse("q", 27);
+	ArrayBigInteger.parse("r", 28);
+	ArrayBigInteger.parse("s", 29);
+	ArrayBigInteger.parse("t", 30);
+
+	ArrayBigInteger.parse("u", 31);
+	ArrayBigInteger.parse("v", 32);
+	ArrayBigInteger.parse("w", 33);
+	ArrayBigInteger.parse("x", 34);
+	ArrayBigInteger.parse("y", 35);
+	ArrayBigInteger.parse("z", 36);
+};
+
+function testNativeParse() {
 	var n;
 	n = BigInteger.parse("0", 10);
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	n = BigInteger.parse("");
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	n = BigInteger.parse("1");
-	checkBigInteger(n, [1], 1);
+	checkNativeBigInteger(n, '1', 1);
 
 	n = BigInteger.parse("-1");
-	checkBigInteger(n, [1], -1);
+	checkNativeBigInteger(n, '1', -1);
 
 	n = BigInteger.parse("+42", 10);
-	checkBigInteger(n, [42], 1);
+	checkNativeBigInteger(n, '42', 1);
 
 	n = BigInteger.parse("+42", 5);
-	checkBigInteger(n, [22], 1);
+	checkNativeBigInteger(n, '22', 1);
 
 	n = BigInteger.parse("23x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], 1);
+	checkNativeBigInteger(n, '2300000', 1);
 
 	n = BigInteger.parse("3425 x 10 ^ -2");
-	checkBigInteger(n, [34], 1);
+	checkNativeBigInteger(n, '34', 1);
 
 	n = BigInteger.parse("342.5 x 10 ^ -2");
-	checkBigInteger(n, [3], 1);
+	checkNativeBigInteger(n, '3', 1);
 
 	n = BigInteger.parse("-23x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2300000] : [0, 230], -1);
+	checkNativeBigInteger(n, '2300000', -1);
 
 	n = BigInteger.parse("-3425 x 10 ^ -2");
-	checkBigInteger(n, [34], -1);
+	checkNativeBigInteger(n, '34', -1);
 
 	n = BigInteger.parse("23.45x10^5");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [2345000] : [5000, 234], 1);
+	checkNativeBigInteger(n, '2345000', 1);
 
 	n = BigInteger.parse("3425e-12");
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	n = BigInteger.parse("-3425e8");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [0, 34250] : [0,0,3425], -1);
+	checkNativeBigInteger(n, '342500000000', -1);
 
 	n = BigInteger.parse("-3425e-12");
-	checkBigInteger(n, [], 0);
+	checkNativeBigInteger(n, '0', 0);
 
 	n = BigInteger.parse("+3425e0");
-	checkBigInteger(n, [3425], 1);
+	checkNativeBigInteger(n, '3425', 1);
 
 	n = BigInteger.parse("0xDeadBeef");
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [5928559, 373] : [8559, 3592, 37], 1);
+	checkNativeBigInteger(n, '3735928559', 1);
 
 	n = BigInteger.parse("12abz", 36);
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [1786319] : [6319, 178], 1);
+	checkNativeBigInteger(n, '1786319', 1);
 
 	n = BigInteger.parse("-0c715");
-	checkBigInteger(n, [461], -1);
+	checkNativeBigInteger(n, '461', -1);
 
 	n = BigInteger.parse("+0b1101");
-	checkBigInteger(n, [13], 1);
+	checkNativeBigInteger(n, '13', 1);
 
 	n = BigInteger.parse("1011", 2);
-	checkBigInteger(n, [11], 1);
+	checkNativeBigInteger(n, '11', 1);
 
 	n = BigInteger.parse("1011", 3);
-	checkBigInteger(n, [31], 1);
+	checkNativeBigInteger(n, '31', 1);
 
 	n = BigInteger.parse("1011", 4);
-	checkBigInteger(n, [69], 1);
+	checkNativeBigInteger(n, '69', 1);
 
 	n = BigInteger.parse("1011", 5);
-	checkBigInteger(n, [131], 1);
+	checkNativeBigInteger(n, '131', 1);
 
 	n = BigInteger.parse("1011", 6);
-	checkBigInteger(n, [223], 1);
+	checkNativeBigInteger(n, '223', 1);
 
 	n = BigInteger.parse("1011", 7);
-	checkBigInteger(n, [351], 1);
+	checkNativeBigInteger(n, '351', 1);
 
 	n = BigInteger.parse("1011", 10);
-	checkBigInteger(n, [1011], 1);
+	checkNativeBigInteger(n, '1011', 1);
 
 	n = BigInteger.parse("1011", 11);
-	checkBigInteger(n, [1343], 1);
+	checkNativeBigInteger(n, '1343', 1);
 
 	n = BigInteger.parse("1011", 12);
-	checkBigInteger(n, [1741], 1);
+	checkNativeBigInteger(n, '1741', 1);
 
 	n = BigInteger.parse("1011", 15);
-	checkBigInteger(n, [3391], 1);
+	checkNativeBigInteger(n, '3391', 1);
 
 	n = BigInteger.parse("1011", 16);
-	checkBigInteger(n, [4113], 1);
+	checkNativeBigInteger(n, '4113', 1);
 
 	n = BigInteger.parse("1011", 36);
-	checkBigInteger(n, BigInteger.base_log10 === 7 ? [46693] : [6693, 4], 1);
+	checkNativeBigInteger(n, '46693', 1);
 
 	n = BigInteger.parse("0b", 16);
-	checkBigInteger(n, [11], 1);
+	checkNativeBigInteger(n, '11', 1);
 
 	n = BigInteger.parse("0c", 16);
-	checkBigInteger(n, [12], 1);
+	checkNativeBigInteger(n, '12', 1);
 
 	n = BigInteger.parse("0b12", 16);
-	checkBigInteger(n, [2834], 1);
+	checkNativeBigInteger(n, '2834', 1);
 
 	n = BigInteger.parse("0c12", 16);
-	checkBigInteger(n, [3090], 1);
+	checkNativeBigInteger(n, '3090', 1);
 
 	n = BigInteger.parse("0b101", 2);
-	checkBigInteger(n, [5], 1);
+	checkNativeBigInteger(n, '5', 1);
 
 	n = BigInteger.parse("0c101", 8);
-	checkBigInteger(n, [65], 1);
+	checkNativeBigInteger(n, '65', 1);
 
 	n = BigInteger.parse("0x101", 16);
-	checkBigInteger(n, [257], 1);
+	checkNativeBigInteger(n, '257', 1);
 
 	BigInteger.parse("1", 2);
 	BigInteger.parse("2", 3);
@@ -289,7 +548,75 @@ function testParse() {
 	BigInteger.parse("z", 36);
 };
 
-function testParseFail() {
+function testArrayParseFail() {
+	function createTest(s, radix) {
+		if (arguments.length < 2) {
+			radix = 10;
+		}
+		return function() { ArrayBigInteger.parse(s, radix); };
+	}
+
+	var radixError  = /^Illegal radix \d+./;
+	var digitError  = /^Bad digit for radix \d+/;
+	var formatError = /^Invalid BigInteger format: /;
+
+	assertThrows(createTest("0", 1), radixError);
+	assertThrows(createTest("0", 37), radixError);
+
+	assertThrows(createTest("+ 42", 10), formatError);
+	assertThrows(createTest("3425 x 10 ^ - 2"), formatError);
+	assertThrows(createTest("34e-2", 16), formatError);
+	assertThrows(createTest("- 23x10^5"), formatError);
+	assertThrows(createTest("-+3425"), formatError);
+	assertThrows(createTest("3425e-"), formatError);
+	assertThrows(createTest("52", 5), digitError);
+	assertThrows(createTest("23a105"), digitError);
+	assertThrows(createTest("DeadBeef", 15), digitError);
+	assertThrows(createTest("-0C715", 10), digitError);
+	assertThrows(createTest("-0x715", 10), digitError);
+	assertThrows(createTest("-0b715", 10), digitError);
+	assertThrows(createTest("-0x715", 8), digitError);
+	assertThrows(createTest("-0b715", 8), digitError);
+	assertThrows(createTest("-0C715", 2), digitError);
+	assertThrows(createTest("-0x715", 2), digitError);
+
+	assertThrows(createTest("2", 2), digitError);
+	assertThrows(createTest("3", 3), digitError);
+	assertThrows(createTest("4", 4), digitError);
+	assertThrows(createTest("5", 5), digitError);
+	assertThrows(createTest("6", 6), digitError);
+	assertThrows(createTest("7", 7), digitError);
+	assertThrows(createTest("8", 8), digitError);
+	assertThrows(createTest("9", 9), digitError);
+	assertThrows(createTest("a", 10), digitError);
+	assertThrows(createTest("b", 11), digitError);
+	assertThrows(createTest("c", 12), digitError);
+	assertThrows(createTest("d", 13), digitError);
+	assertThrows(createTest("e", 14), digitError);
+	assertThrows(createTest("f", 15), digitError);
+	assertThrows(createTest("g", 16), digitError);
+	assertThrows(createTest("h", 17), digitError);
+	assertThrows(createTest("i", 18), digitError);
+	assertThrows(createTest("j", 19), digitError);
+	assertThrows(createTest("k", 20), digitError);
+	assertThrows(createTest("l", 21), digitError);
+	assertThrows(createTest("m", 22), digitError);
+	assertThrows(createTest("n", 23), digitError);
+	assertThrows(createTest("o", 24), digitError);
+	assertThrows(createTest("p", 25), digitError);
+	assertThrows(createTest("q", 26), digitError);
+	assertThrows(createTest("r", 27), digitError);
+	assertThrows(createTest("s", 28), digitError);
+	assertThrows(createTest("t", 29), digitError);
+	assertThrows(createTest("u", 30), digitError);
+	assertThrows(createTest("v", 31), digitError);
+	assertThrows(createTest("w", 32), digitError);
+	assertThrows(createTest("x", 33), digitError);
+	assertThrows(createTest("y", 34), digitError);
+	assertThrows(createTest("z", 35), digitError);
+};
+
+function testNativeParseFail() {
 	function createTest(s, radix) {
 		if (arguments.length < 2) {
 			radix = 10;
@@ -361,21 +688,38 @@ function testToString() {
 	runLines('test-toString.js');
 };
 
-function testConstants() {
-	assertEquals(37, BigInteger.small.length);
+function testArrayConstants() {
+	assertEquals(37, ArrayBigInteger.small.length);
 
-	checkBigInteger(BigInteger.small[0], [], 0);
-	checkBigInteger(BigInteger._0, [], 0);
-	checkBigInteger(BigInteger.ZERO, [], 0);
-	checkBigInteger(BigInteger._1, [1], 1);
-	checkBigInteger(BigInteger.ONE, [1], 1);
-	checkBigInteger(BigInteger.M_ONE, [1], -1);
+	checkArrayBigInteger(ArrayBigInteger.small[0], [], 0);
+	checkArrayBigInteger(ArrayBigInteger._0, [], 0);
+	checkArrayBigInteger(ArrayBigInteger.ZERO, [], 0);
+	checkArrayBigInteger(ArrayBigInteger._1, [1], 1);
+	checkArrayBigInteger(ArrayBigInteger.ONE, [1], 1);
+	checkArrayBigInteger(ArrayBigInteger.M_ONE, [1], -1);
 
 	for (var i = 1; i <= 36; i++) {
-		checkBigInteger(BigInteger.small[i], [i], 1);
+		checkArrayBigInteger(ArrayBigInteger.small[i], [i], 1);
 	}
 
-	checkBigInteger(BigInteger.MAX_EXP, null, 1);
+	checkArrayBigInteger(ArrayBigInteger.MAX_EXP, null, 1);
+};
+
+function testNativeConstants() {
+	assertEquals(37, BigInteger.small.length);
+
+	checkNativeBigInteger(BigInteger.small[0], '0', 0);
+	checkNativeBigInteger(BigInteger._0, '0', 0);
+	checkNativeBigInteger(BigInteger.ZERO, '0', 0);
+	checkNativeBigInteger(BigInteger._1, '1', 1);
+	checkNativeBigInteger(BigInteger.ONE, '1', 1);
+	checkNativeBigInteger(BigInteger.M_ONE, '1', -1);
+
+	for (var i = 1; i <= 36; i++) {
+		checkNativeBigInteger(BigInteger.small[i], String(i), 1);
+	}
+
+	checkNativeBigInteger(BigInteger.MAX_EXP, null, 1);
 };
 
 function testToJSValue() {
@@ -525,17 +869,17 @@ function testModPow() {
 };
 
 
-function TestBigInteger() {
+function TestArrayBigInteger() {
 	this.start = new Date();
 }
 
-TestBigInteger.prototype = {
+TestArrayBigInteger.prototype = {
 /* Basic Functions */
-	testConstructor: testConstructor,
-	testConstants: testConstants,
-	testConversion: testConversion,
-	testParse: testParse,
-	testParseFail: testParseFail,
+	testArrayConstructor: testArrayConstructor,
+	testArrayConstants: testArrayConstants,
+	testArrayConversion: testArrayConversion,
+	testArrayParse: testArrayParse,
+	testArrayParseFail: testArrayParseFail,
 	testToString: testToString,
 	testToJSValue: testToJSValue,
 	testValueOf: testValueOf,
@@ -576,4 +920,61 @@ TestBigInteger.prototype = {
 	}
 };
 
-runTests(TestBigInteger, +process.argv[2]);
+function TestNativeBigInteger() {
+	this.start = new Date();
+}
+
+TestNativeBigInteger.prototype = {
+/* Basic Functions */
+	testNativeConstructor: testNativeConstructor,
+	testNativeConstants: testNativeConstants,
+	testNativeConversion: testNativeConversion,
+	testNativeParse: testNativeParse,
+	testNativeParseFail: testNativeParseFail,
+	testToString: testToString,
+	testToJSValue: testToJSValue,
+	testValueOf: testValueOf,
+/* Unary Functions */
+	testNegate: testNegate,
+	testNext: testNext,
+	testPrev: testPrev,
+	testAbs: testAbs,
+	testSquare: testSquare,
+/* Binary Functions */
+	testAdd: testAdd,
+	testSubtract: testSubtract,
+	testMultiply: testMultiply,
+	testDivRem: testDivRem,
+	testExp10: testExp10,
+/* Slow Binary Functions */
+	testPow: testPow,
+/* Comparisons/Information */
+	testCompareAbs: testCompareAbs,
+	testCompare: testCompare,
+	testIsUnit: testIsUnit,
+	testIsZero: testIsZero,
+	testIsPositive: testIsPositive,
+	testIsNegative: testIsNegative,
+	testIsEven: testIsEven,
+	testIsOdd: testIsOdd,
+	testSign: testSign,
+/* Trinary Functions */
+	testModPow: testModPow,
+
+/* Keep track of the time for each test */
+	tearDown: function(show) {
+		if (show) {
+			var end = new Date();
+			console.log("        Completed in " + (end - this.start) + "ms");
+			this.start = new Date();
+		}
+	}
+};
+
+var BigInteger = ArrayBigInteger;
+runTests(TestArrayBigInteger, +process.argv[2]);
+
+if (DefaultBigInteger !== ArrayBigInteger) {
+	BigInteger = DefaultBigInteger;
+	runTests(TestNativeBigInteger, +process.argv[2]);
+}
