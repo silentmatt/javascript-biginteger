@@ -2,7 +2,7 @@
 
 [![Gitter](https://badges.gitter.im/silentmatt/javascript-biginteger.svg)](https://gitter.im/silentmatt/javascript-biginteger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Usage
+## Usage Examples
 
 ### In Node.js
 
@@ -25,3 +25,7 @@
     </script>
 
 For more details, see the full [API documentation](https://silentmatt.com/biginteger-docs/files/biginteger-js.html).
+
+## Documentation
+
+[API Documentation](/docs/api.md)
