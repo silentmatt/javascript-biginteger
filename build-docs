@@ -1,5 +1,0 @@
-#!/bin/sh
-
-[ -d docs-nd ] || mkdir docs-nd
-[ -d NaturalDocs ] || mkdir NaturalDocs
-NaturalDocs -i . -p NaturalDocs -o HTML docs-nd
